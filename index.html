@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Johnny | Life Insurance</title>
+<meta name="description" content="Find out in 60 seconds what life insurance coverage fits your family. Free, no-obligation quote from a licensed agent.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Palette (first draft — easy to swap) ---------- */
+  :root{
+    --bg-0:#0b1324;      /* deep navy */
+    --bg-1:#13213d;
+    --glow-a:#2b4c8c;    /* blue haze */
+    --glow-b:#c9a25b;    /* warm gold */
+    --glow-c:#1f6f6b;    /* muted teal */
+    --ink:#f4efe6;       /* cream text */
+    --ink-dim:rgba(244,239,230,.68);
+    --accent:#d9b46a;
+    --accent-ink:#1a1408;
+    --card:rgba(255,255,255,.06);
+    --card-line:rgba(255,255,255,.12);
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:Inter,system-ui,sans-serif;
+    color:var(--ink);
+    background:var(--bg-0);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- Background: drifting light + horizon + grain ---------- */
+  .bg{position:fixed;inset:0;z-index:0;overflow:hidden;
+      background:radial-gradient(120% 90% at 70% 110%, var(--bg-1) 0%, var(--bg-0) 60%)}
+  .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.55;will-change:transform}
+  .orb.a{width:55vmax;height:55vmax;left:-15vmax;top:-20vmax;background:var(--glow-a);animation:drift-a 26s ease-in-out infinite alternate}
+  .orb.b{width:38vmax;height:38vmax;right:-10vmax;bottom:-14vmax;background:var(--glow-b);opacity:.35;animation:drift-b 32s ease-in-out infinite alternate}
+  .orb.c{width:30vmax;height:30vmax;left:35%;top:40%;background:var(--glow-c);opacity:.3;animation:drift-c 38s ease-in-out infinite alternate}
+  @keyframes drift-a{to{transform:translate(12vmax,10vmax) scale(1.1)}}
+  @keyframes drift-b{to{transform:translate(-14vmax,-8vmax) scale(1.15)}}
+  @keyframes drift-c{to{transform:translate(-18vmax,-12vmax) scale(.9)}}
+
+  /* cursor-follow light (parallax layer) */
+  .spot{position:absolute;width:40vmax;height:40vmax;border-radius:50%;
+        background:radial-gradient(circle, rgba(217,180,106,.14), transparent 60%);
+        left:0;top:0;transform:translate3d(var(--mx,50vw),var(--my,50vh),0) translate(-50%,-50%);
+        transition:transform 1.2s var(--ease-out);pointer-events:none}
+
+  /* sunrise horizon lines */
+  .horizon{position:absolute;left:0;right:0;bottom:0;height:42vh;opacity:.5;
+           transform:translate3d(calc(var(--px,0) * -14px), calc(var(--py,0) * -8px),0);
+           transition:transform 1.2s var(--ease-out)}
+  .horizon path{fill:none;stroke:url(#hz);stroke-width:1;stroke-dasharray:1400;stroke-dashoffset:1400;
+                animation:draw 3.2s var(--ease-out) forwards}
+  .horizon path:nth-child(2){animation-delay:.25s}
+  .horizon path:nth-child(3){animation-delay:.5s}
+  .horizon path:nth-child(4){animation-delay:.75s}
+  @keyframes draw{to{stroke-dashoffset:0}}
+
+  .grain{position:absolute;inset:-50%;opacity:.07;pointer-events:none;
+         background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+         animation:grain 1s steps(4) infinite}
+  @keyframes grain{25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-2%,-1%)}}
+
+  /* ---------- Layout ---------- */
+  .page{position:relative;z-index:1;height:100vh;height:100dvh;
+        display:grid;grid-template-rows:auto 1fr auto;
+        padding:clamp(16px,3vw,40px) clamp(16px,5vw,72px)}
+  header{display:flex;justify-content:space-between;align-items:center}
+  .brand{font-family:Fraunces,serif;font-size:1.25rem;font-weight:600;letter-spacing:.01em;display:flex;align-items:center;gap:.55rem}
+  .brand svg{width:26px;height:26px}
+  .phone{color:var(--ink-dim);text-decoration:none;font-size:.9rem;border:1px solid var(--card-line);padding:.5rem .9rem;border-radius:99px;transition:all .3s var(--ease-out)}
+  .phone:hover{color:var(--ink);border-color:var(--accent);background:rgba(217,180,106,.08)}
+
+  main{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(24px,5vw,80px);align-items:center;min-height:0}
+
+  /* ---------- Hero ---------- */
+  .eyebrow{display:inline-flex;align-items:center;gap:.5rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:1.1rem}
+  .eyebrow::before{content:"";width:28px;height:1px;background:var(--accent)}
+  h1{font-family:Fraunces,serif;font-weight:400;font-size:clamp(2.2rem,5.2vw,4.6rem);line-height:1.02;letter-spacing:-.02em}
+  h1 em{font-style:italic;color:var(--accent)}
+  h1 .line{display:block;overflow:hidden;padding-bottom:.06em}
+  h1 .line span{display:inline-block;transform:translateY(110%);animation:rise 1.1s var(--ease-out) forwards}
+  h1 .line:nth-child(2) span{animation-delay:.12s}
+  h1 .line:nth-child(3) span{animation-delay:.24s}
+  @keyframes rise{to{transform:none}}
+  .lede{margin-top:1.3rem;max-width:30rem;font-size:clamp(.98rem,1.2vw,1.1rem);line-height:1.6;color:var(--ink-dim)}
+  .trust{display:flex;gap:1.6rem;margin-top:2rem;flex-wrap:wrap}
+  .trust div{font-size:.82rem;color:var(--ink-dim);display:flex;align-items:center;gap:.5rem}
+  .trust b{font-family:Fraunces,serif;font-size:1.5rem;font-weight:600;color:var(--ink)}
+  .fade{opacity:0;transform:translateY(14px);animation:fade .9s var(--ease-out) forwards}
+  @keyframes fade{to{opacity:1;transform:none}}
+
+  /* ---------- Form card ---------- */
+  .card{position:relative;background:var(--card);border:1px solid var(--card-line);border-radius:24px;
+        padding:clamp(22px,2.6vw,36px);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);
+        box-shadow:0 30px 80px -30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.08);
+        max-width:480px;width:100%;justify-self:end;
+        opacity:0;transform:translateY(24px) scale(.98);animation:card-in 1.1s .35s var(--ease-out) forwards}
+  @keyframes card-in{to{opacity:1;transform:none}}
+  /* animated edge sheen */
+  .card::before{content:"";position:absolute;inset:-1px;border-radius:inherit;padding:1px;pointer-events:none;
+        background:conic-gradient(from var(--ang,0deg), transparent 0 70%, rgba(217,180,106,.7) 80%, transparent 90%);
+        -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+        animation:spin 7s linear infinite}
+  @property --ang{syntax:'<angle>';inherits:false;initial-value:0deg}
+  @keyframes spin{to{--ang:360deg}}
+
+  .progress{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.4rem;font-size:.78rem;color:var(--ink-dim);letter-spacing:.06em}
+  .bar{flex:1;height:3px;background:rgba(255,255,255,.1);border-radius:3px;margin-left:1rem;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--accent),#f1d9a4);border-radius:inherit;transition:width .7s var(--ease-out)}
+
+  .steps{position:relative;height:270px}
+  fieldset{border:0;min-width:0}
+  .step{position:absolute;inset:0;display:flex;flex-direction:column;
+        opacity:0;transform:translateX(40px);pointer-events:none;
+        transition:opacity .5s var(--ease-out), transform .6s var(--ease-out)}
+  .step.active{opacity:1;transform:none;pointer-events:auto}
+  .step.past{transform:translateX(-40px)}
+  .step h2{font-family:Fraunces,serif;font-weight:400;font-size:clamp(1.3rem,1.9vw,1.65rem);line-height:1.2;margin-bottom:1.1rem}
+
+  .opts{display:grid;gap:.6rem}
+  .opts.two{grid-template-columns:1fr 1fr}
+  .opt{position:relative;display:flex;align-items:center;gap:.75rem;padding:.85rem 1rem;border-radius:14px;
+       border:1px solid var(--card-line);background:rgba(255,255,255,.03);cursor:pointer;font-size:.95rem;
+       transition:border-color .25s, background .25s, transform .35s var(--ease-spring)}
+  .opt:hover{border-color:rgba(217,180,106,.55);background:rgba(217,180,106,.06);transform:translateY(-2px)}
+  .opt:active{transform:scale(.97)}
+  .opt input{position:absolute;opacity:0}
+  .opt .dot{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);flex:none;position:relative;transition:border-color .25s}
+  .opt .dot::after{content:"";position:absolute;inset:3px;border-radius:50%;background:var(--accent);transform:scale(0);transition:transform .35s var(--ease-spring)}
+  .opt:has(input:checked){border-color:var(--accent);background:rgba(217,180,106,.1)}
+  .opt:has(input:checked) .dot{border-color:var(--accent)}
+  .opt:has(input:checked) .dot::after{transform:scale(1)}
+  .opt:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+
+  .stagger > *{opacity:0;transform:translateY(10px)}
+  .step.active .stagger > *{animation:fade .5s var(--ease-out) forwards}
+  .step.active .stagger > *:nth-child(1){animation-delay:.08s}
+  .step.active .stagger > *:nth-child(2){animation-delay:.14s}
+  .step.active .stagger > *:nth-child(3){animation-delay:.2s}
+  .step.active .stagger > *:nth-child(4){animation-delay:.26s}
+
+  .field{display:flex;flex-direction:column;gap:.35rem}
+  .field label{font-size:.78rem;color:var(--ink-dim);letter-spacing:.04em}
+  .field input{width:100%;min-width:0;font:inherit;color:var(--ink);background:rgba(255,255,255,.04);border:1px solid var(--card-line);border-radius:12px;padding:.8rem .95rem;outline:none;transition:border-color .25s, box-shadow .25s}
+  .field input::placeholder{color:rgba(244,239,230,.3)}
+  .field input:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(217,180,106,.15)}
+  .field input.bad{border-color:#e07a6a;animation:shake .4s}
+  @keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+
+  .nav{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:1.2rem}
+  .back{background:none;border:0;color:var(--ink-dim);font:inherit;font-size:.88rem;cursor:pointer;padding:.4rem 0;transition:color .2s, opacity .3s}
+  .back:hover{color:var(--ink)}
+  .back[hidden]{display:inline-block;visibility:hidden}
+  .btn{position:relative;overflow:hidden;font:inherit;font-weight:600;font-size:.95rem;color:var(--accent-ink);background:var(--accent);
+       border:0;border-radius:99px;padding:.9rem 1.5rem;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:.5rem;
+       box-shadow:0 10px 30px -10px rgba(217,180,106,.7);
+       transition:transform .4s var(--ease-spring), box-shadow .3s, opacity .3s}
+  .btn:hover{box-shadow:0 14px 36px -10px rgba(217,180,106,.9)}
+  .btn:active{transform:scale(.96)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+  .btn svg{transition:transform .35s var(--ease-out)}
+  .btn:hover:not(:disabled) svg{transform:translateX(4px)}
+  .btn::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.45) 50%,transparent 70%);transform:translateX(-120%)}
+  .btn:hover:not(:disabled)::after{transform:translateX(120%);transition:transform .8s var(--ease-out)}
+  .fine{font-size:.72rem;color:rgba(244,239,230,.45);margin-top:.9rem;line-height:1.5}
+
+  /* success */
+  .done{align-items:center;justify-content:center;text-align:center}
+  .check{width:72px;height:72px;margin-bottom:1rem}
+  .check circle{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:220;stroke-dashoffset:220}
+  .check path{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:50;stroke-dashoffset:50}
+  .done.active .check circle{animation:dash .8s var(--ease-out) forwards}
+  .done.active .check path{animation:dash .5s .55s var(--ease-out) forwards}
+  @keyframes dash{to{stroke-dashoffset:0}}
+  .done p{color:var(--ink-dim);max-width:22rem;line-height:1.6}
+
+  footer{font-size:.72rem;color:rgba(244,239,230,.4);display:flex;justify-content:space-between;gap:1rem}
+
+  /* ---------- Responsive: still no-scroll on phones ---------- */
+  @media (max-width:860px){
+    .page{gap:12px}
+    main{grid-template-columns:1fr;align-content:center;gap:20px}
+    .card{justify-self:stretch;max-width:none;padding:20px;border-radius:20px}
+    h1{font-size:clamp(1.8rem,8vw,2.4rem)}
+    .lede,.trust,.eyebrow,footer{display:none}
+    .steps{height:262px}
+    .step h2{font-size:1.2rem;margin-bottom:.9rem}
+    .opt{padding:.75rem .9rem}
+    .fine{display:none}
+    .phone{padding:.4rem .75rem;font-size:.8rem}
+    .brand{font-size:1.1rem}
+    .back{white-space:nowrap}
+  }
+  @media (max-height:700px) and (max-width:860px){
+    h1{font-size:1.6rem}
+    .steps{height:240px}
+    .opt{padding:.6rem .85rem;font-size:.9rem}
+    .opts{gap:.45rem}
+    .field{gap:.2rem}
+    .field label{font-size:.7rem}
+    .field input{padding:.6rem .8rem}
+    .btn{padding:.8rem 1.2rem}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+    .orb,.grain{animation:none!important}
+  }
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true">
+  <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
+  <div class="spot"></div>
+  <svg class="horizon" viewBox="0 0 1440 400" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="hz" x1="0" x2="1">
+        <stop offset="0" stop-color="#d9b46a" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#d9b46a" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#d9b46a" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <path d="M0 300 C 360 220, 1080 220, 1440 300"/>
+    <path d="M0 330 C 360 260, 1080 260, 1440 330"/>
+    <path d="M0 360 C 360 300, 1080 300, 1440 360"/>
+    <path d="M0 390 C 360 340, 1080 340, 1440 390"/>
+  </svg>
+  <div class="grain"></div>
+</div>
+
+<div class="page">
+  <header class="fade">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 3 5 7v8c0 7 4.7 12 11 14 6.3-2 11-7 11-14V7L16 3Z" stroke="#d9b46a" stroke-width="1.6"/><path d="M11 16.5l3.3 3.2L21 13" stroke="#d9b46a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Johnny&nbsp;<span style="font-weight:400;opacity:.7">Life</span>
+    </div>
+    <a class="phone" href="tel:+15555555555">(555) 555-5555</a>
+  </header>
+
+  <main>
+    <section>
+      <p class="eyebrow fade" style="animation-delay:.1s">Licensed life insurance agent</p>
+      <h1>
+        <span class="line"><span>Protect the</span></span>
+        <span class="line"><span>people who</span></span>
+        <span class="line"><span><em>count on you.</em></span></span>
+      </h1>
+      <p class="lede fade" style="animation-delay:.5s">Answer five quick questions and I'll personally shop top-rated carriers for the right coverage at the lowest price. No pressure, no obligation.</p>
+      <div class="trust fade" style="animation-delay:.7s">
+        <div><b>60s</b> to qualify</div>
+        <div><b>20+</b> carriers compared</div>
+        <div><b>$0</b> cost to you</div>
+      </div>
+    </section>
+
+    <form class="card" id="quote" novalidate>
+      <div class="progress"><span id="count">Step 1 of 5</span><div class="bar"><i id="bar"></i></div></div>
+
+      <div class="steps">
+        <!-- 1 -->
+        <fieldset class="step active" data-step="1">
+          <h2>Who are you looking to protect?</h2>
+          <div class="opts stagger">
+            <label class="opt"><input type="radio" name="protect" value="family"><span class="dot"></span>My spouse &amp; kids</label>
+            <label class="opt"><input type="radio" name="protect" value="spouse"><span class="dot"></span>My spouse or partner</label>
+            <label class="opt"><input type="radio" name="protect" value="final-expenses"><span class="dot"></span>Cover final expenses</label>
+            <label class="opt"><input type="radio" name="protect" value="mortgage"><span class="dot"></span>Pay off my mortgage / debt</label>
+          </div>
+        </fieldset>
+
+        <!-- 2 -->
+        <fieldset class="step" data-step="2">
+          <h2>What's your age range?</h2>
+          <div class="opts two stagger">
+            <label class="opt"><input type="radio" name="age" value="18-34"><span class="dot"></span>18 – 34</label>
+            <label class="opt"><input type="radio" name="age" value="35-49"><span class="dot"></span>35 – 49</label>
+            <label class="opt"><input type="radio" name="age" value="50-64"><span class="dot"></span>50 – 64</label>
+            <label class="opt"><input type="radio" name="age" value="65+"><span class="dot"></span>65 +</label>
+          </div>
+        </fieldset>
+
+        <!-- 3 -->
+        <fieldset class="step" data-step="3">
+          <h2>How much coverage are you thinking?</h2>
+          <div class="opts two stagger">
+            <label class="opt"><input type="radio" name="coverage" value="<100k"><span class="dot"></span>Under $100k</label>
+            <label class="opt"><input type="radio" name="coverage" value="100-250k"><span class="dot"></span>$100k – $250k</label>
+            <label class="opt"><input type="radio" name="coverage" value="250-500k"><span class="dot"></span>$250k – $500k</label>
+            <label class="opt"><input type="radio" name="coverage" value="500k+"><span class="dot"></span>$500k +</label>
+          </div>
+        </fieldset>
+
+        <!-- 4 -->
+        <fieldset class="step" data-step="4">
+          <h2>Have you used tobacco or nicotine in the last 12 months?</h2>
+          <div class="opts two stagger">
+            <label class="opt"><input type="radio" name="tobacco" value="no"><span class="dot"></span>No</label>
+            <label class="opt"><input type="radio" name="tobacco" value="yes"><span class="dot"></span>Yes</label>
+          </div>
+        </fieldset>
+
+        <!-- 5 -->
+        <fieldset class="step" data-step="5">
+          <h2>Where should I send your quote?</h2>
+          <div class="opts stagger">
+            <div class="field"><label for="name">Full name</label><input id="name" name="name" autocomplete="name" placeholder="Jane Smith" required></div>
+            <div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="(555) 123-4567" required></div>
+            <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" autocomplete="email" placeholder="jane@email.com" required></div>
+          </div>
+        </fieldset>
+
+        <!-- done -->
+        <div class="step done" data-step="6">
+          <svg class="check" viewBox="0 0 72 72"><circle cx="36" cy="36" r="34"/><path d="M23 37l9 9 17-19"/></svg>
+          <h2>You're all set.</h2>
+          <p>I'll review your answers and reach out within one business day with your best options.</p>
+        </div>
+      </div>
+
+      <div class="nav" id="nav">
+        <button type="button" class="back" id="back" hidden>← Back</button>
+        <button type="submit" class="btn" id="next" disabled>
+          <span id="nextLabel">Continue</span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <p class="fine" id="fine">Your info stays private and is never sold.</p>
+    </form>
+  </main>
+
+  <footer class="fade" style="animation-delay:.9s">
+    <span>© 2026 Johnny Life. Licensed insurance agent.</span>
+    <span>Coverage subject to underwriting approval.</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const form = document.getElementById('quote');
+  const steps = [...form.querySelectorAll('.step')];
+  const next = document.getElementById('next');
+  const nextLabel = document.getElementById('nextLabel');
+  const back = document.getElementById('back');
+  const bar = document.getElementById('bar');
+  const count = document.getElementById('count');
+  const TOTAL = 5;
+  let i = 0;
+
+  const valid = () => {
+    const s = steps[i];
+    if (s.querySelector('input[type=radio]')) return !!s.querySelector('input:checked');
+    return true; // contact step validated on submit
+  };
+
+  const render = () => {
+    steps.forEach((s, k) => {
+      s.classList.toggle('active', k === i);
+      s.classList.toggle('past', k < i);
+      s.inert = k !== i;
+    });
+    bar.style.width = (Math.min(i, TOTAL) / TOTAL * 100) + '%';
+    count.textContent = i < TOTAL ? `Step ${i + 1} of ${TOTAL}` : 'Complete';
+    back.hidden = i === 0 || i >= TOTAL;
+    nextLabel.textContent = i === TOTAL - 1 ? 'Get my free quote' : 'Continue';
+    next.disabled = !valid();
+    if (i >= TOTAL) { document.getElementById('nav').style.display = 'none'; document.getElementById('fine').style.display = 'none'; }
+  };
+
+  // auto-advance on radio pick — feels snappy, one tap per question
+  form.addEventListener('change', e => {
+    if (e.target.type !== 'radio') return;
+    next.disabled = false;
+    setTimeout(() => { if (i < TOTAL - 1) { i++; render(); } }, 380);
+  });
+
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    if (i < TOTAL - 1) { if (valid()) { i++; render(); } return; }
+    // contact step
+    const fields = [...steps[i].querySelectorAll('input')];
+    let ok = true;
+    fields.forEach(f => {
+      const good = f.value.trim() && (f.type !== 'email' || /\S+@\S+\.\S+/.test(f.value)) && (f.type !== 'tel' || f.value.replace(/\D/g,'').length >= 10);
+      f.classList.toggle('bad', !good);
+      if (!good) { ok = false; f.addEventListener('animationend', () => f.classList.remove('bad'), {once:true}); }
+    });
+    if (!ok) return;
+    const data = Object.fromEntries(new FormData(form));
+    console.log('Lead:', data); // TODO: send to CRM / Formspree / email
+    i = TOTAL; render();
+  });
+
+  back.addEventListener('click', () => { if (i > 0) { i--; render(); } });
+
+  // ambient parallax: cursor nudges the light + horizon
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const root = document.documentElement;
+    addEventListener('pointermove', e => {
+      root.style.setProperty('--mx', e.clientX + 'px');
+      root.style.setProperty('--my', e.clientY + 'px');
+      root.style.setProperty('--px', (e.clientX / innerWidth - .5) * 2);
+      root.style.setProperty('--py', (e.clientY / innerHeight - .5) * 2);
+    }, {passive:true});
+  }
+
+  render();
+})();
+</script>
+</body>
+</html>
