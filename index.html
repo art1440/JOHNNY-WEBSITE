@@ -51,6 +51,7 @@
     </div>
 
     <form class="card" id="quote" novalidate>
+      <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
       <div class="progress"><span id="count">Step 1 of 5</span><div class="bar"><i id="bar"></i></div></div>
 
       <div class="steps">
@@ -111,6 +112,8 @@
           <svg class="check" viewBox="0 0 72 72"><circle cx="36" cy="36" r="34"/><path d="M23 37l9 9 17-19"/></svg>
           <h2>You're all set.</h2>
           <p>I'll review your answers and reach out within one business day with your best options.</p>
+          <button type="button" class="btn" id="bookBtn" hidden style="margin-top:1.2rem">Pick a time for your call
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
         </div>
       </div>
 
@@ -121,7 +124,7 @@
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
-      <p class="fine" id="fine">Your info stays private and is never sold.</p>
+      <p class="fine" id="fine" role="status">Your info stays private and is never sold.</p>
     </form>
   </div>
   <a class="scroll-cue fade" style="animation-delay:1.4s" href="#about"><i></i>Scroll</a>
@@ -200,6 +203,7 @@
   </div>
 </footer>
 </div>
+<script src="config.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

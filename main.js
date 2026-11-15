@@ -142,10 +142,79 @@
       if (!good) { ok = false; f.addEventListener('animationend', () => f.classList.remove('bad'), { once: true }); }
     });
     if (!ok) return;
-    const data = Object.fromEntries(new FormData(form));
-    console.log('Lead:', data); // TODO: send to CRM / Formspree / email
-    i = TOTAL; render();
+    sendLead();
   });
+
+  /* ---------- Send lead to CRM webhook ---------- */
+  const CFG = Object.assign({ LEAD_WEBHOOK_URL: '', BOOKING_URL: '', LEAD_SOURCE: 'Verion Life website' }, window.VERION_CONFIG || {});
+  const fine = document.getElementById('fine');
+  let sending = false;
+
+  function buildLead() {
+    const d = Object.fromEntries(new FormData(form));
+    const [first_name, ...rest] = (d.name || '').trim().split(/\s+/);
+    const q = new URLSearchParams(location.search);
+    const lead = {
+      first_name, last_name: rest.join(' '), full_name: (d.name || '').trim(),
+      phone: d.phone.trim(), email: d.email.trim(),
+      protecting: d.protect, age_range: d.age, coverage_amount: d.coverage, tobacco: d.tobacco,
+      source: CFG.LEAD_SOURCE, tags: ['website-lead', `coverage:${d.coverage}`],
+      page: location.href, referrer: document.referrer || '',
+      submitted_at: new Date().toISOString(),
+    };
+    ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid'].forEach(k => { if (q.get(k)) lead[k] = q.get(k); });
+    return lead;
+  }
+
+  /* One request per lead, sent as a standard form post. This is a "simple" request
+     (no CORS preflight), so it reaches any webhook (GoHighLevel, Zapier, Make, n8n…)
+     and is never sent twice. Zapier/Make/GHL parse these fields automatically. */
+  function post(url, lead) {
+    const body = new URLSearchParams();
+    Object.entries(lead).forEach(([k, v]) => body.append(k, Array.isArray(v) ? v.join(',') : v));
+    return fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true, body });
+  }
+
+  async function sendLead() {
+    if (sending) return;
+    if (form.elements.company && form.elements.company.value) { i = TOTAL; render(); return; } // bot honeypot
+    const lead = buildLead();
+    sending = true; next.disabled = true; nextLabel.textContent = 'Sending…'; next.classList.add('loading');
+    try {
+      if (CFG.LEAD_WEBHOOK_URL) await post(CFG.LEAD_WEBHOOK_URL, lead);
+      else console.warn('[Verion Life] No LEAD_WEBHOOK_URL set in config.js. Lead not sent:', lead);
+      i = TOTAL; render(); setupBooking(lead);
+    } catch (err) {
+      console.error(err);
+      fine.textContent = "Couldn't send. Check your connection and try again, or call us.";
+      fine.classList.add('err');
+      next.disabled = false; nextLabel.textContent = 'Try again';
+    } finally { sending = false; next.classList.remove('loading'); }
+  }
+
+  /* ---------- Booking calendar (CRM / Calendly link) in a modal ---------- */
+  function setupBooking(lead) {
+    const btn = document.getElementById('bookBtn');
+    if (!btn || !CFG.BOOKING_URL) return;
+    btn.hidden = false;
+    btn.onclick = () => {
+      const u = new URL(CFG.BOOKING_URL, location.href);
+      // most booking tools prefill from these
+      u.searchParams.set('name', lead.full_name); u.searchParams.set('first_name', lead.first_name);
+      u.searchParams.set('last_name', lead.last_name); u.searchParams.set('email', lead.email); u.searchParams.set('phone', lead.phone);
+      const m = document.createElement('div');
+      m.className = 'modal';
+      m.innerHTML = `<div class="modal-box" role="dialog" aria-modal="true" aria-label="Book a call">
+        <button type="button" class="modal-x" aria-label="Close">&times;</button>
+        <iframe src="${u.href.replace(/"/g, '&quot;')}" title="Booking calendar"></iframe></div>`;
+      const close = () => { m.classList.remove('open'); setTimeout(() => m.remove(), 250); removeEventListener('keydown', esc); };
+      const esc = e => e.key === 'Escape' && close();
+      m.addEventListener('click', e => { if (e.target === m || e.target.closest('.modal-x')) close(); });
+      addEventListener('keydown', esc);
+      document.body.append(m); requestAnimationFrame(() => m.classList.add('open'));
+      m.querySelector('.modal-x').focus();
+    };
+  }
   back.addEventListener('click', () => { if (i > 0) { i--; render(); } });
   render();
 })();
