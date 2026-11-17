@@ -12,18 +12,27 @@ python3 -m http.server 8000
 
 Then open http://localhost:8000 (add `?lang=en` to open in English, handy for English-language ads).
 
-## What's on the page
+## The design: "Casa de colores"
 
-1. **Hero + quiz.** Six one-tap questions that advance on their own; between questions the agent's avatar shows
-   a short "typing…" pause so it feels like a conversation with a real person. The headline word rotates
-   (su familia → sus hijos → su pareja → su hogar → su tranquilidad).
-2. **Así de sencillo.** The three-step process.
-3. **No soy un call center.** Agent photo, license, NPN, states, a "verify my license" link and a signature.
-4. **Testimonios.** Three placeholders, each tagged "Ejemplo, reemplazar".
-5. **Preguntas frecuentes.** Spanish service, SSN/ITIN, medical exam, cost, work insurance, privacy.
-6. **Closing call/WhatsApp band**, then a legal footer.
+The page is a sunlit street of painted Latin American houses. Each section is a lime-washed wall in its own color
+(marigold, turquoise, bougainvillea, sky blue, indigo), ending in the darker painted band (zócalo) along the
+bottom of the wall. Type is Alegreya / Alegreya Sans (designed in Argentina). Small trim uses talavera tile.
 
-A WhatsApp button floats in once the quiz scrolls off screen. Its "¡Hola!" bubble pops once per visit.
+1. **Hero.** The headline is painted above an arched window like a shop sign; the protected word changes by itself
+   (su familia → sus hijos → su pareja → su hogar → su tranquilidad) and is brushed on each time. A bougainvillea
+   vine sways at the top with its shadow on the wall, and window light drifts as you scroll.
+2. **The quiz lives in the window.** The agent's face sits at the top of the arch. Six one-tap questions advance on
+   their own; between questions a speech bubble shows him "typing". Each answer fills with paint from where it was
+   tapped, and the progress tiles turn into painted talavera as you go.
+3. **Así de sencillo.** Three steps drawn as stairs, with tile risers.
+4. **No soy un call center.** Photo in an arched doorway, license and NPN on a tile plaque, a "verify my license"
+   link, and a handwritten signature.
+5. **Testimonios.** Postcards with stamps; the "EJEMPLO" postmark marks them as samples.
+6. **Preguntas frecuentes.** Spanish service, SSN/ITIN, medical exam, cost, work insurance, privacy.
+7. **Mi puerta está abierta.** A green door swings open onto the WhatsApp and call buttons. Then a legal footer.
+
+A WhatsApp button floats in once the quiz scrolls off screen; its "¡Hola!" bubble pops once per visit.
+Everything respects "reduce motion" settings.
 
 ## Info needed to finish it
 
@@ -50,7 +59,7 @@ Most of this goes in **`config.js`** and fills in everywhere automatically:
   SSN/ITIN answer.
 - **"Verify my license" link** points to NIPR's public lookup (`LICENSE_LOOKUP_URL`). Confirm it opens, or swap
   in your state's Department of Insurance lookup.
-- **Testimonials** are samples. Publish only real, permissioned reviews, and remove the "Ejemplo" tags when you do.
+- **Testimonials** are samples. Publish only real, permissioned reviews, and remove the "EJEMPLO" postmarks when you do.
 - The consent text under the last question covers calls, texts and WhatsApp. Have it checked against your
   compliance requirements.
 

@@ -103,7 +103,6 @@
       root.lang = l;
       swapText(l);
       fillConfig();
-      splitLegends();
       $$('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
       buildRotator();
       renderChrome();
@@ -120,20 +119,21 @@
   }));
 
   /* ---------- Headline: the protected word changes by itself ---------- */
+  // each new word is painted on, and the white brush stroke under it is repainted to fit
   const rot = $('#rot');
-  const swoosh = $('.swoosh');
+  const brush = $('.brush');
   let rotIdx = 0, rotTimer = 0, heroVisible = true;
   function buildRotator() {
     if (!rot) return;
     rot.innerHTML = T[lang].words.map((w, k) => `<em class="${k === 0 ? 'on' : ''}">${w}</em>`).join('');
     rotIdx = 0;
-    fitSwoosh();
+    fitBrush(true);
   }
-  function fitSwoosh() {
-    if (!rot || !swoosh) return;
-    const ems = [...rot.children];
-    const max = Math.max(...ems.map(e => e.offsetWidth)) || 1;
-    swoosh.style.setProperty('--k', (ems[rotIdx].offsetWidth / max).toFixed(3));
+  function fitBrush(repaint) {
+    if (!rot || !brush) return;
+    const w = rot.children[rotIdx].offsetWidth;
+    brush.style.setProperty('--bw', `calc(${w}px + .3em)`);
+    if (repaint && !reduce) { brush.classList.remove('paint'); void brush.getBoundingClientRect(); brush.classList.add('paint'); }
   }
   function tickRotator() {
     if (document.hidden || !heroVisible) return;
@@ -143,12 +143,12 @@
     const nxt = ems[rotIdx];
     cur.classList.remove('on'); cur.classList.add('off');
     nxt.classList.remove('off'); nxt.classList.add('on');
-    setTimeout(() => cur.classList.remove('off'), 500);
-    fitSwoosh();
+    setTimeout(() => cur.classList.remove('off'), 400);
+    fitBrush(true);
   }
-  if (rot && !reduce) rotTimer = setInterval(tickRotator, 2800);
-  addEventListener('resize', fitSwoosh, { passive: true });
-  if (document.fonts) document.fonts.ready.then(fitSwoosh);
+  if (rot && !reduce) rotTimer = setInterval(tickRotator, 3200);
+  addEventListener('resize', () => fitBrush(false), { passive: true });
+  if (document.fonts) document.fonts.ready.then(() => fitBrush(false));
 
   /* ---------- Quiz ---------- */
   const form = $('#cotizar');
@@ -157,16 +157,9 @@
   const next = $('#next'), nextLabel = $('#nextLabel'), back = $('#back');
   const count = $('#count'), typing = $('#typing'), stepsBox = $('.steps', form);
   const fineOk = $('#fineOk'), fineErr = $('#fineErr'), cardFoot = $('#cardFoot');
-  const segs = $$('.segs i', form);
+  const segs = $$('.tiles i', form);
   let i = 0, busy = false, autoT = 0, sending = false;
   let lastInput = 'pointer', arrowKey = false;
-
-  function splitLegends() {
-    $$('legend', form).forEach(lg => {
-      const words = lg.textContent.trim().split(/\s+/);
-      lg.innerHTML = words.map((w, k) => `<span class="w" style="--i:${k}">${w}</span>`).join(' ');
-    });
-  }
 
   const valid = () => {
     const s = steps[i];
@@ -243,8 +236,14 @@
   let wasChecked = false;
   form.addEventListener('pointerdown', e => {
     lastInput = 'pointer'; arrowKey = false;
-    const r = e.target.closest('.opt') && e.target.closest('.opt').querySelector('input[type=radio]');
+    const opt = e.target.closest('.opt');
+    const r = opt && opt.querySelector('input[type=radio]');
     wasChecked = !!(r && r.checked);
+    if (opt) { // the answer floods with paint from where it was tapped
+      const b = opt.getBoundingClientRect();
+      opt.style.setProperty('--x', ((e.clientX - b.left) / b.width * 100).toFixed(1) + '%');
+      opt.style.setProperty('--y', ((e.clientY - b.top) / b.height * 100).toFixed(1) + '%');
+    }
   });
   // tapping the answer you already picked (after going back) also moves on
   form.addEventListener('click', e => {
@@ -387,18 +386,25 @@
     hero.classList.toggle('offscreen', !heroVisible);
   }).observe(hero);
 
-  if (!reduce && matchMedia('(hover: hover)').matches) {
-    let raf = 0, mx = 0, my = 0;
-    hero.addEventListener('pointermove', e => {
-      mx = e.clientX; my = e.clientY;
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        root.style.setProperty('--mx', mx + 'px');
-        root.style.setProperty('--my', my + 'px');
-        root.style.setProperty('--px', ((mx / innerWidth - .5) * 2).toFixed(3));
-        root.style.setProperty('--py', ((my / innerHeight - .5) * 2).toFixed(3));
-      });
+  if (!reduce) {
+    // the pointer acts like the sun: the vine's shadow leans away from it
+    if (matchMedia('(hover: hover)').matches) {
+      let raf = 0, mx = 0, my = 0;
+      hero.addEventListener('pointermove', e => {
+        mx = e.clientX; my = e.clientY;
+        if (raf) return;
+        raf = requestAnimationFrame(() => {
+          raf = 0;
+          hero.style.setProperty('--sx', ((mx / innerWidth - .5) * 2).toFixed(3));
+          hero.style.setProperty('--sy', ((my / innerHeight - .5) * 2).toFixed(3));
+        });
+      }, { passive: true });
+    }
+    // scrolling moves the afternoon light across the wall
+    let sraf = 0;
+    addEventListener('scroll', () => {
+      if (sraf || !heroVisible) return;
+      sraf = requestAnimationFrame(() => { sraf = 0; hero.style.setProperty('--sun', Math.min(1, scrollY / innerHeight).toFixed(3)); });
     }, { passive: true });
   }
 
@@ -418,7 +424,7 @@
       bubbleT = setTimeout(() => {
         bubble.classList.add('on');
         store.set('waBubble', 'shown', sessionStorage);
-        bubbleT = setTimeout(() => bubble.classList.remove('on'), 9000);
+        bubbleT = setTimeout(() => bubble.classList.remove("on"), 7000);
       }, 2600);
     }
   };
