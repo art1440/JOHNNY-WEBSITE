@@ -2,7 +2,7 @@
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- Header: turns to paper once you scroll off the blueprint ---------- */
+  /* ---------- Header ---------- */
   const header = document.querySelector('.site-header');
   const onScroll = () => header && header.classList.toggle('scrolled', scrollY > 10);
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
@@ -58,67 +58,38 @@
     [...t.children].forEach(c => { const d = c.cloneNode(true); d.setAttribute('aria-hidden', 'true'); t.append(d); });
   });
 
-  /* ---------- Drafting crosshair + coordinate readout over the hero (mouse only) ---------- */
-  const hero = document.querySelector('.hero');
-  if (hero && !reduce && matchMedia('(hover:hover)').matches) {
-    const xh = hero.querySelector('.xhair'), tx = document.getElementById('tbx'), ty = document.getElementById('tby');
-    let raf = 0, ex = 0, ey = 0;
-    hero.addEventListener('pointermove', e => {
-      ex = e.clientX; ey = e.clientY;
-      if (raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        const r = hero.getBoundingClientRect(), x = ex - r.left, y = ey - r.top;
-        xh.style.setProperty('--cx', x + 'px'); xh.style.setProperty('--cy', y + 'px');
-        if (tx) { tx.textContent = 'X ' + String(Math.round(x)).padStart(4, '0'); ty.textContent = 'Y ' + String(Math.round(y)).padStart(4, '0'); }
-      });
-    }, { passive: true });
+  /* ---------- Glass spheres drift up as you scroll so they never sit behind text for long ---------- */
+  if (!reduce) {
+    const orbs = [...document.querySelectorAll('.orb')], speed = [0.55, 0.9, 0.35];
+    let sraf = 0;
+    const drift = () => { sraf = 0; orbs.forEach((o, k) => o.style.translate = `0 ${(-scrollY * speed[k % 3]).toFixed(1)}px`); };
+    addEventListener('scroll', () => { if (!sraf) sraf = requestAnimationFrame(drift); }, { passive: true });
+    drift();
   }
 
-  /* ---------- Answer highlight spreads from where you tapped ---------- */
-  document.querySelectorAll('.opt').forEach(o => o.addEventListener('pointerdown', e => {
-    const r = o.getBoundingClientRect();
-    o.style.setProperty('--tx', (e.clientX - r.left) + 'px'); o.style.setProperty('--ty', (e.clientY - r.top) + 'px');
-  }));
-
-  /* ---------- The plan: dashed "proposed" drawing that inks in as the quiz is answered ---------- */
-  const plan = document.getElementById('plan');
-  if (plan) {
-    // each part gets a dashed ghost copy underneath; the original becomes the ink layer
-    plan.querySelectorAll('[data-part]').forEach(g => {
-      const setLen = () => g.querySelectorAll('.ln').forEach(el => el.setAttribute('pathLength', '1'));
-      if (g.classList.contains('ink')) { setLen(); return; }
-      const ghost = g.cloneNode(true); // ghost keeps real lengths so its dashes stay dashes
-      setLen();
-      ghost.removeAttribute('data-part'); ghost.classList.add('ghost');
-      ghost.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
-      ghost.querySelectorAll('.glow, .dimtext').forEach(n => n.remove());
-      g.before(ghost); g.classList.add('ink');
-    });
-    const part = n => plan.querySelector(`[data-part="${n}"]`);
-    const note = (n, text) => { const g = plan.querySelector(`[data-note="${n}"]`); g.querySelector('text').textContent = text; g.classList.add('on'); };
-    const FIGS = { family: ['a1', 'k1', 'a2', 'k2'], spouse: ['a1', 'a2'], 'final-expenses': ['a1'], mortgage: ['a1', 'a2'] };
-    const labelOf = input => input.closest('label').textContent.trim();
-    const qform = document.getElementById('quote');
-    qform && qform.addEventListener('change', e => {
-      const t = e.target; if (t.type !== 'radio') return;
-      if (t.name === 'protect') {
-        part('walls').classList.add('on');
-        const on = FIGS[t.value] || [];
-        plan.querySelectorAll('.fig').forEach((f, k) => {
-          const show = on.includes(f.dataset.fig);
-          f.style.transitionDelay = show ? (.5 + k * .12) + 's' : '0s';
-          f.classList.toggle('on', show);
-        });
-        note('protect', labelOf(t));
+  /* ---------- Liquid: a glass droplet trails the pointer; glass ripples harder the faster you move ---------- */
+  if (!reduce && matchMedia('(hover:hover)').matches) {
+    const lens = document.querySelector('.lens');
+    const disp = document.querySelector('#liquid feDisplacementMap');
+    const BASE = 30;
+    let tx = -200, ty = -200, x = tx, y = ty, px = tx, py = ty, scale = BASE, raf = 0;
+    const loop = () => {
+      x += (tx - x) * 0.16; y += (ty - y) * 0.16;            // trailing spring
+      const v = Math.min(60, Math.hypot(x - px, y - py)); px = x; py = y;
+      if (lens) {
+        lens.style.setProperty('--lx', x + 'px'); lens.style.setProperty('--ly', y + 'px');
+        lens.style.setProperty('--ls', (1 + v / 120).toFixed(3)); // stretches while moving, like a drop
       }
-      if (t.name === 'age') { part('roof').classList.add('on'); note('age', 'Age ' + labelOf(t).replace(/\s+/g, ' ')); }
-      if (t.name === 'coverage') { part('foundation').classList.add('on'); document.getElementById('planCov').textContent = labelOf(t).toUpperCase(); }
-      if (t.name === 'tobacco') { part('details').classList.add('on'); note('tobacco', 'Tobacco: ' + labelOf(t)); }
-    });
-    const done = document.querySelector('.step.done');
-    done && new MutationObserver(() => { if (done.classList.contains('active')) document.getElementById('planStamp').classList.add('on'); })
-      .observe(done, { attributes: true, attributeFilter: ['class'] });
+      const target = BASE + v * 1.1;
+      if (disp && Math.abs(target - scale) > 0.5) { scale += (target - scale) * 0.12; disp.setAttribute('scale', scale.toFixed(1)); }
+      raf = (Math.abs(tx - x) + Math.abs(ty - y) > 0.3 || Math.abs(scale - BASE) > 0.6) ? requestAnimationFrame(loop) : 0;
+    };
+    addEventListener('pointermove', e => {
+      tx = e.clientX; ty = e.clientY;
+      if (lens && !lens.classList.contains('on')) { x = px = tx; y = py = ty; lens.classList.add('on'); }
+      if (!raf) raf = requestAnimationFrame(loop);
+    }, { passive: true });
+    document.addEventListener('pointerleave', () => lens && lens.classList.remove('on'));
   }
 
   /* ---------- "Get a quote" links: glide to the form, focus first answer ---------- */

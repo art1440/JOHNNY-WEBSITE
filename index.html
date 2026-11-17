@@ -5,17 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Verion Life | Life Insurance</title>
 <meta name="description" content="Protect your family's legacy. Answer five quick questions for a free, no-obligation life insurance quote from a licensed agent.">
-<meta name="theme-color" content="#0e7490">
-<script>document.documentElement.className='js'</script>
+<script>document.documentElement.className="js"+(/Chrome\//.test(navigator.userAgent)?" refract":"")</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="bg" aria-hidden="true">
+  <svg class="defs" width="0" height="0">
+    <defs>
+      <!-- liquid refraction for glass panels (Chromium); other browsers get frosted blur -->
+      <filter id="liquid" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.011" numOctaves="2" seed="7" result="n"/>
+        <feGaussianBlur in="n" stdDeviation="3" result="nb"/>
+        <feDisplacementMap in="SourceGraphic" in2="nb" scale="30" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+      <filter id="droplet" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+        <feTurbulence type="turbulence" baseFrequency="0.018" numOctaves="1" seed="2" result="n"/>
+        <feDisplacementMap in="SourceGraphic" in2="n" scale="22" xChannelSelector="R" yChannelSelector="B"/>
+      </filter>
+      <!-- water caustics: thin bright light lines -->
+      <filter id="caustics" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="turbulence" baseFrequency="0.011 0.016" numOctaves="2" seed="11"/>
+        <feColorMatrix values="0 0 0 0 0.13  0 0 0 0 0.83  0 0 0 0 0.93  0 0 0 -2.6 1.25"/>
+      </filter>
+    </defs>
+  </svg>
+  <div class="aurora a"></div><div class="aurora b"></div><div class="aurora c"></div>
+  <svg class="caustics" preserveAspectRatio="none"><rect width="100%" height="100%" filter="url(#caustics)"/></svg>
+  <div class="grid"></div>
+  <div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div>
+  <div class="lens"></div>
+</div>
+<div class="wrap">
 <header class="site-header">
-  <div class="container">
-    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M5 15 16 6l11 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 13v13h16V13" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 26v-6h4v6" stroke-width="1.6"/><path d="M3 28.5h26" stroke-width="1.2" stroke-dasharray="2 2"/></svg>Verion <span>Life</span></a>
+  <div class="container lg">
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 3 5 7v8c0 7 4.7 12 11 14 6.3-2 11-7 11-14V7L16 3Z" stroke="currentColor" stroke-width="1.6"/><path d="M11 16.5l3.3 3.2L21 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Verion <span>Life</span></a>
     <nav class="links" aria-label="Main">
       <a class="nl" href="index.html#about">How it works</a>
       <a class="nl" href="testimonials.html">Testimonials</a>
@@ -23,69 +49,26 @@
     </nav>
   </div>
 </header>
-<main>
-<!-- ============ 1. HERO: blueprint sheet + qualifying form ============ -->
-<section class="hero print">
-  <div class="sheet-edge"></div>
-  <div class="xhair" aria-hidden="true"><i class="x"></i><i class="y"></i></div>
+
+<!-- ============ 1. HERO + QUALIFYING FORM ============ -->
+<section class="hero">
   <div class="container hero-grid">
-    <div class="hero-copy">
+    <div>
       <p class="eyebrow fade" style="animation-delay:.1s">Licensed life insurance agent</p>
       <h1>
         <span class="line"><span>Protect the</span></span>
         <span class="line"><span>people who</span></span>
         <span class="line"><span><em>count on you.</em></span></span>
       </h1>
-      <p class="lede fade" style="animation-delay:.45s">Answer five quick questions and I'll personally shop top-rated carriers for the right coverage at the lowest price. No pressure, no obligation.</p>
-      <div class="trust fade" style="animation-delay:.6s">
+      <p class="lede fade" style="animation-delay:.5s">Answer five quick questions and I'll personally shop top-rated carriers for the right coverage at the lowest price. No pressure, no obligation.</p>
+      <div class="trust fade" style="animation-delay:.7s">
         <div><b>60s</b> to qualify</div>
         <div><b>20+</b> carriers compared</div>
         <div><b>$0</b> cost to you</div>
       </div>
     </div>
 
-    <figure class="plan" aria-hidden="true">
-      <svg viewBox="0 0 520 400" id="plan">
-        <g class="ink on" data-part="ground">
-          <path class="ln" d="M14 330H506"/>
-          <path class="ln thin" d="M30 330l-8 9M60 330l-8 9M90 330l-8 9M450 330l-8 9M480 330l-8 9M510 330l-8 9"/>
-        </g>
-        <g data-part="walls">
-          <rect class="ln" x="100" y="172" width="320" height="146"/>
-          <rect class="ln" x="128" y="200" width="64" height="52"/><path class="ln thin" d="M124 256H196"/>
-          <rect class="ln" x="328" y="200" width="64" height="52"/><path class="ln thin" d="M324 256H396"/>
-          <rect class="ln" x="236" y="236" width="48" height="82"/><circle class="ln" cx="275" cy="280" r="2.5"/>
-        </g>
-        <g data-part="roof">
-          <path class="ln" d="M80 172L260 72L440 172Z"/>
-          <circle class="ln" cx="260" cy="128" r="11"/><path class="ln thin" d="M249 128H271"/>
-        </g>
-        <g data-part="foundation">
-          <rect class="ln" x="88" y="318" width="344" height="12"/>
-          <path class="ln thin hatch" d="M100 330l10-12M130 330l10-12M160 330l10-12M190 330l10-12M220 330l10-12M250 330l10-12M280 330l10-12M310 330l10-12M340 330l10-12M370 330l10-12M400 330l10-12"/>
-          <path class="ln thin" d="M88 336V370M432 336V370M88 362H432M84 366l8-8M428 366l8-8"/>
-          <text class="dimtext" x="260" y="355" text-anchor="middle">COVERAGE <tspan id="planCov">· · ·</tspan></text>
-        </g>
-        <g data-part="details">
-          <path class="ln" d="M352 123V84H380V139"/>
-          <path class="ln thin" d="M366 78c-8-10 8-16 0-26c-8-10 6-14 2-22"/>
-          <rect class="glow" x="129" y="201" width="62" height="50"/><rect class="glow" x="329" y="201" width="62" height="50"/>
-        </g>
-        <g id="figs">
-          <g class="fig" data-fig="a1"><circle cx="150" cy="220" r="6"/><path d="M138 252Q150 229 162 252"/></g>
-          <g class="fig" data-fig="k1"><circle cx="176" cy="231" r="4.5"/><path d="M168 252Q176 237 184 252"/></g>
-          <g class="fig" data-fig="a2"><circle cx="350" cy="220" r="6"/><path d="M338 252Q350 229 362 252"/></g>
-          <g class="fig" data-fig="k2"><circle cx="376" cy="231" r="4.5"/><path d="M368 252Q376 237 384 252"/></g>
-        </g>
-        <g class="note" data-note="protect"><path class="ld" d="M60 40Q78 120 150 196"/><text x="8" y="32" id="noteProtect"></text></g>
-        <g class="note r" data-note="age"><path class="ld" d="M398 150L436 134H514"/><text x="514" y="128" text-anchor="end" id="noteAge"></text></g>
-        <g class="note r" data-note="tobacco"><path class="ld" d="M381 100H514"/><text x="514" y="94" text-anchor="end" id="noteTobacco"></text></g>
-        <g class="stamp" id="planStamp"><rect x="182" y="4" width="156" height="34"/><text x="260" y="26" text-anchor="middle">PLAN STARTED</text></g>
-      </svg>
-      <figcaption class="plan-caption"><span>A-01 · Family plan</span><span>- - proposed &nbsp; ── secured</span></figcaption>
-    </figure>
-
-    <form class="card" id="quote" novalidate>
+    <form class="card lg" id="quote" novalidate>
       <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
       <div class="progress"><span id="count">Step 1 of 5</span><div class="bar"><i id="bar"></i></div></div>
 
@@ -162,33 +145,30 @@
       <p class="fine" id="fine" role="status">Your info stays private and is never sold.</p>
     </form>
   </div>
-  <div class="titleblock" aria-hidden="true"><span>Verion Life</span><span>Sheet A-01</span><span>Drawn for</span><span>Your family</span><span id="tbx">X 0000</span><span id="tby">Y 0000</span></div>
-  <a class="scroll-cue fade" style="animation-delay:1.2s" href="#about"><i></i>Scroll</a>
+  <a class="scroll-cue fade" style="animation-delay:1.4s" href="#about"><i></i>Scroll</a>
 </section>
 
 <!-- ============ 2. ABOUT + HOW IT WORKS ============ -->
-<section class="section paper" id="about">
+<section class="section" id="about">
   <div class="container about">
     <div class="reveal from-left">
         <div class="frame">
           <div class="shot">
-            <div class="ph"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="12" width="38" height="28"/><path d="M17 12l3-5h8l3 5"/><circle cx="24" cy="26" r="7"/></svg><span>Agent portrait</span><code>images/agent.jpg</code></div>
+            <div class="ph"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="12" width="38" height="28" rx="6"/><path d="M17 12l3-5h8l3 5"/><circle cx="24" cy="26" r="7"/></svg><span>Agent portrait</span><code>images/agent.jpg</code></div>
             <img src="images/agent.jpg" alt="Portrait of your Verion Life agent" onerror="this.remove()">
           </div>
-          <span class="dim-v" aria-hidden="true"><b>1250 px</b></span>
-          <span class="dim-h" aria-hidden="true"><b>1000 px</b></span>
-          <div class="badge tl"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 4 6v6c0 4.5 3.4 8.4 8 9.5 4.6-1.1 8-5 8-9.5V6l-8-3Z"/></svg></span><div><b>Licensed agent</b>[Your state here]</div></div>
-          <div class="badge br"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4V5Z"/></svg></span><div><b>Se habla español</b>English &amp; Spanish</div></div>
+          <div class="lg badge tl"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z"/></svg></span><div><b>Licensed agent</b>[Your state here]</div></div>
+          <div class="lg badge br"><span class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg></span><div><b>Se habla español</b>English &amp; Spanish</div></div>
         </div>
     </div>
-    <div class="about-copy">
+    <div>
       <p class="eyebrow reveal">Your family's legacy</p>
       <h2 class="title" data-split>Hi, I'm here to make this <em>simple.</em></h2>
-      <p class="intro reveal" style="--d:.15s">Life insurance shouldn't be confusing. I work for you, not one insurance company, so I can compare plans side by side and walk you through them in plain language. You decide, with zero pressure.</p>
+      <p class="reveal" style="--d:.15s;margin-top:1rem;color:var(--ink-dim);line-height:1.7;max-width:34rem">Life insurance shouldn't be confusing. I work for you, not one insurance company, so I can compare plans side by side and walk you through them in plain language. You decide, with zero pressure.</p>
       <ol class="how">
-        <li class="reveal" style="--d:.2s"><div><h3>Answer five questions</h3><p>Takes about a minute. No medical exam to get started.</p></div></li>
-        <li class="reveal" style="--d:.3s"><div><h3>I compare 20+ carriers</h3><p>I find the coverage that fits your family and your budget.</p></div></li>
-        <li class="reveal" style="--d:.4s"><div><h3>You choose, I handle the rest</h3><p>Paperwork, questions, claims. I'm one call away for life.</p></div></li>
+        <li class="lg reveal" style="--d:.2s"><div><h3>Answer five questions</h3><p>Takes about a minute. No medical exam to get started.</p></div></li>
+        <li class="lg reveal" style="--d:.3s"><div><h3>I compare 20+ carriers</h3><p>I find the coverage that fits your family and your budget.</p></div></li>
+        <li class="lg reveal" style="--d:.4s"><div><h3>You choose, I handle the rest</h3><p>Paperwork, questions, claims. I'm one call away for life.</p></div></li>
       </ol>
       <div class="chips reveal" style="--d:.5s"><span>Term life</span><span>Whole life</span><span>Final expense</span><span>Mortgage protection</span><span>Indexed universal life</span></div>
     </div>
@@ -196,53 +176,51 @@
 </section>
 
 <!-- ============ 3. TESTIMONIAL PREVIEW + CTA ============ -->
-<section class="section paper" style="padding-top:0">
+<section class="section" style="padding-top:0">
   <div class="container">
     <div class="section-head center">
       <p class="eyebrow reveal">Families we've helped</p>
       <h2 class="title" data-split>Peace of mind, <em>in their words.</em></h2>
     </div>
     <div class="tgrid">
-        <article class="tcard reveal" style="--d:0s">
+        <article class="tcard lg reveal" style="--d:0s">
           <span class="sample">Sample — replace</span>
+          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>He explained everything in plain words and found us a policy that actually fits our budget. I finally feel like the kids are covered.</blockquote>
           <div class="who"><span class="avatar">MG<img src="images/client-1.jpg" alt="" onerror="this.remove()"></span><div><b>María G.</b><small>Mother of three · Term life</small></div></div>
         </article>
-        <article class="tcard reveal" style="--d:.1s">
+        <article class="tcard lg reveal" style="--d:.12s">
           <span class="sample">Sample — replace</span>
+          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>I'd put this off for years. Five minutes on the form, one phone call, and it was done. No pressure at all.</blockquote>
           <div class="who"><span class="avatar">DR<img src="images/client-2.jpg" alt="" onerror="this.remove()"></span><div><b>Daniel R.</b><small>First-time buyer · Term life</small></div></div>
         </article>
-        <article class="tcard reveal" style="--d:.2s">
+        <article class="tcard lg reveal" style="--d:.24s">
           <span class="sample">Sample — replace</span>
+          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>When my husband passed, the claim was handled quickly and with so much care. I'm grateful we planned ahead.</blockquote>
           <div class="who"><span class="avatar">RL<img src="images/client-3.jpg" alt="" onerror="this.remove()"></span><div><b>Rosa L.</b><small>Beneficiary · Whole life</small></div></div>
         </article>
     </div>
-    <div style="text-align:center"><a class="more reveal" href="testimonials.html">Read more family stories <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg></a></div>
+    <div style="text-align:center"><a class="more reveal" href="testimonials.html">Read more family stories <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
 
-    <div class="cta print reveal zoom" style="margin-top:clamp(72px,11vh,130px)">
-      <div class="sheet-edge"></div>
-      <div class="door" aria-hidden="true"><svg viewBox="0 0 100 180"><rect class="light" x="12" y="10" width="76" height="160"/><path class="frm" d="M4 176V2H96V176M0 176H100"/><g class="leaf"><rect x="12" y="10" width="76" height="160"/><circle cx="76" cy="94" r="3" fill="none" stroke="#fff" stroke-width="1.6"/></g></svg></div>
-      <div>
-        <h2>Your family's legacy, <em>secured.</em></h2>
-        <p>One minute today can protect the people you love for decades. Get your free, no-obligation quote.</p>
-        <a class="btn light" href="#quote">Start my free quote <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg></a>
-      </div>
+    <div class="cta reveal zoom" style="margin-top:clamp(64px,10vh,120px)">
+      <h2>Your family's legacy, <em>secured.</em></h2>
+      <p>One minute today can protect the people you love for decades. Get your free, no-obligation quote.</p>
+      <a class="btn light" href="#quote">Start my free quote <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
   </div>
 </section>
-</main>
-<footer class="site-footer paper">
+<footer class="site-footer">
   <div class="container">
-    <span class="tb-brand">Verion Life</span>
     <span>© 2026 Verion Life. Licensed life insurance agent.</span>
     <span>Coverage subject to underwriting approval. · <a href="testimonials.html">Testimonials</a></span>
   </div>
 </footer>
+</div>
 <script src="config.js"></script>
 <script src="main.js"></script>
 </body>
