@@ -369,6 +369,9 @@ h2.title em{font-style:normal;font-weight:300;color:var(--deep)}
   .hero{padding:26px 0 30px;align-items:flex-start}
   .hero-grid{grid-template-columns:1fr;gap:18px}
   .card{justify-self:stretch;max-width:none;padding:20px 18px 16px;border-radius:26px}
+  .card,.steps,.step{min-width:0}
+  .nav{gap:.8rem}
+  .nav .btn{flex:1;justify-content:center;white-space:normal;text-align:center;line-height:1.2;font-size:.88rem;padding:.7rem 1rem}
   .card .progress::before,.card .progress::after{display:none}
   h1{font-size:clamp(2.1rem,10vw,2.8rem)}
   .hero .lede,.hero .trust,.hero .eyebrow,.scroll-cue,.lens{display:none}

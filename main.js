@@ -51,7 +51,7 @@
 
   /* ---------- Stars ---------- */
   const star = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L10 14.8l-5.2 2.8 1-5.8L1.5 7.7l5.9-.8L10 1.5z"/></svg>';
-  document.querySelectorAll('[data-stars]').forEach(el => { el.innerHTML = star.repeat(+el.dataset.stars || 5); el.setAttribute('aria-label', `${el.dataset.stars || 5} out of 5 stars`); });
+  document.querySelectorAll('[data-stars]').forEach(el => { el.innerHTML = star.repeat(+el.dataset.stars || 5); el.setAttribute('aria-label', `${el.dataset.stars || 5} de 5 estrellas`); });
 
   /* ---------- Marquee: duplicate content for a seamless loop ---------- */
   document.querySelectorAll('.marquee .track').forEach(t => {
@@ -120,9 +120,9 @@
   const render = () => {
     steps.forEach((s, k) => { s.classList.toggle('active', k === i); s.classList.toggle('past', k < i); s.inert = k !== i; });
     bar.style.width = (Math.min(i, TOTAL) / TOTAL * 100) + '%';
-    countEl.textContent = i < TOTAL ? `Step ${i + 1} of ${TOTAL}` : 'Complete';
+    countEl.textContent = i < TOTAL ? `Paso ${i + 1} de ${TOTAL}` : 'Completo';
     back.hidden = i === 0 || i >= TOTAL;
-    nextLabel.textContent = i === TOTAL - 1 ? 'Get my free quote' : 'Continue';
+    nextLabel.textContent = i === TOTAL - 1 ? 'Obtener mi cotización gratuita' : 'Continuar';
     next.disabled = !valid();
     if (i >= TOTAL) { document.getElementById('nav').style.display = 'none'; document.getElementById('fine').style.display = 'none'; }
   };
@@ -178,16 +178,16 @@
     if (sending) return;
     if (form.elements.company && form.elements.company.value) { i = TOTAL; render(); return; } // bot honeypot
     const lead = buildLead();
-    sending = true; next.disabled = true; nextLabel.textContent = 'Sending…'; next.classList.add('loading');
+    sending = true; next.disabled = true; nextLabel.textContent = 'Enviando…'; next.classList.add('loading');
     try {
       if (CFG.LEAD_WEBHOOK_URL) await post(CFG.LEAD_WEBHOOK_URL, lead);
       else console.warn('[Verion Life] No LEAD_WEBHOOK_URL set in config.js. Lead not sent:', lead);
       i = TOTAL; render(); setupBooking(lead);
     } catch (err) {
       console.error(err);
-      fine.textContent = "Couldn't send. Check your connection and try again, or call us.";
+      fine.textContent = "No se pudo enviar. Revise su conexión e intente de nuevo, o llámenos.";
       fine.classList.add('err');
-      next.disabled = false; nextLabel.textContent = 'Try again';
+      next.disabled = false; nextLabel.textContent = 'Intentar de nuevo';
     } finally { sending = false; next.classList.remove('loading'); }
   }
 
@@ -203,9 +203,9 @@
       u.searchParams.set('last_name', lead.last_name); u.searchParams.set('email', lead.email); u.searchParams.set('phone', lead.phone);
       const m = document.createElement('div');
       m.className = 'modal';
-      m.innerHTML = `<div class="modal-box" role="dialog" aria-modal="true" aria-label="Book a call">
-        <button type="button" class="modal-x" aria-label="Close">&times;</button>
-        <iframe src="${u.href.replace(/"/g, '&quot;')}" title="Booking calendar"></iframe></div>`;
+      m.innerHTML = `<div class="modal-box" role="dialog" aria-modal="true" aria-label="Agendar una llamada">
+        <button type="button" class="modal-x" aria-label="Cerrar">&times;</button>
+        <iframe src="${u.href.replace(/"/g, '&quot;')}" title="Calendario de citas"></iframe></div>`;
       const close = () => { m.classList.remove('open'); setTimeout(() => m.remove(), 250); removeEventListener('keydown', esc); };
       const esc = e => e.key === 'Escape' && close();
       m.addEventListener('click', e => { if (e.target === m || e.target.closest('.modal-x')) close(); });
