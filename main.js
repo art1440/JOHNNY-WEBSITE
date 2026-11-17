@@ -58,39 +58,18 @@
     [...t.children].forEach(c => { const d = c.cloneNode(true); d.setAttribute('aria-hidden', 'true'); t.append(d); });
   });
 
-  /* ---------- Glass spheres drift up as you scroll so they never sit behind text for long ---------- */
-  if (!reduce) {
-    const orbs = [...document.querySelectorAll('.orb')], speed = [0.55, 0.9, 0.35];
+  /* ---------- Glass spheres drift up as you scroll (CSS scroll-timeline does it on the compositor; JS only as fallback) ---------- */
+  if (!reduce && !(window.CSS && CSS.supports('animation-timeline', 'scroll()'))) {
+    const orbs = [...document.querySelectorAll('.orb')], speed = [1.1, 0.4];
     let sraf = 0;
-    const drift = () => { sraf = 0; orbs.forEach((o, k) => o.style.translate = `0 ${(-scrollY * speed[k % 3]).toFixed(1)}px`); };
+    const drift = () => { sraf = 0; const y = scrollY; orbs.forEach((o, k) => o.style.translate = `0 ${(-y * speed[k % 2]).toFixed(1)}px`); };
     addEventListener('scroll', () => { if (!sraf) sraf = requestAnimationFrame(drift); }, { passive: true });
     drift();
   }
 
-  /* ---------- Liquid: a glass droplet trails the pointer; glass ripples harder the faster you move ---------- */
-  if (!reduce && matchMedia('(hover:hover)').matches) {
-    const lens = document.querySelector('.lens');
-    const disp = document.querySelector('#liquid feDisplacementMap');
-    const BASE = 30;
-    let tx = -200, ty = -200, x = tx, y = ty, px = tx, py = ty, scale = BASE, raf = 0;
-    const loop = () => {
-      x += (tx - x) * 0.16; y += (ty - y) * 0.16;            // trailing spring
-      const v = Math.min(60, Math.hypot(x - px, y - py)); px = x; py = y;
-      if (lens) {
-        lens.style.setProperty('--lx', x + 'px'); lens.style.setProperty('--ly', y + 'px');
-        lens.style.setProperty('--ls', (1 + v / 120).toFixed(3)); // stretches while moving, like a drop
-      }
-      const target = BASE + v * 1.1;
-      if (disp && Math.abs(target - scale) > 0.5) { scale += (target - scale) * 0.12; disp.setAttribute('scale', scale.toFixed(1)); }
-      raf = (Math.abs(tx - x) + Math.abs(ty - y) > 0.3 || Math.abs(scale - BASE) > 0.6) ? requestAnimationFrame(loop) : 0;
-    };
-    addEventListener('pointermove', e => {
-      tx = e.clientX; ty = e.clientY;
-      if (lens && !lens.classList.contains('on')) { x = px = tx; y = py = ty; lens.classList.add('on'); }
-      if (!raf) raf = requestAnimationFrame(loop);
-    }, { passive: true });
-    document.addEventListener('pointerleave', () => lens && lens.classList.remove('on'));
-  }
+  /* ---------- Pause looping animations while they're off screen ---------- */
+  const loopIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('paused', !e.isIntersecting)), { rootMargin: '100px' });
+  document.querySelectorAll('.marquee, .cta').forEach(el => loopIO.observe(el));
 
   /* ---------- "Get a quote" links: glide to the form, focus first answer ---------- */
   document.querySelectorAll('a[href="#quote"]').forEach(a => a.addEventListener('click', e => {
