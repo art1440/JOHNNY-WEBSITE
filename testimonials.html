@@ -1,25 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Testimonials | Verion Life</title>
 <meta name="description" content="Real stories from families protected by Verion Life.">
+<meta name="theme-color" content="#0e7490">
+<script>document.documentElement.className='js'</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div class="bg" aria-hidden="true">
-  <div class="orb a"></div><div class="orb b"></div><div class="orb c"></div>
-  <div class="spot"></div>
-  <div class="grain"></div>
-</div>
-<div class="wrap">
 <header class="site-header">
   <div class="container">
-    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 3 5 7v8c0 7 4.7 12 11 14 6.3-2 11-7 11-14V7L16 3Z" stroke="#06b6d4" stroke-width="1.6"/><path d="M11 16.5l3.3 3.2L21 13" stroke="#06b6d4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Verion <span>Life</span></a>
+    <a class="brand" href="index.html"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M5 15 16 6l11 9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 13v13h16V13" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 26v-6h4v6" stroke-width="1.6"/><path d="M3 28.5h26" stroke-width="1.2" stroke-dasharray="2 2"/></svg>Verion <span>Life</span></a>
     <nav class="links" aria-label="Main">
       <a class="nl" href="index.html#about">How it works</a>
       <a class="nl" href="testimonials.html" aria-current="page">Testimonials</a>
@@ -27,53 +23,56 @@
     </nav>
   </div>
 </header>
-
+<main>
 <!-- ============ PAGE HERO ============ -->
-<section class="page-hero">
+<section class="page-hero print">
+  <div class="sheet-edge"></div>
   <div class="container">
     <p class="eyebrow fade">Client stories</p>
     <h1>
       <span class="line"><span>Families who</span></span>
       <span class="line"><span><em>sleep better</em> at night.</span></span>
     </h1>
-    <p class="lede fade" style="animation-delay:.45s">Every policy is a promise. Here's what the families I've worked with say about keeping theirs.</p>
+    <p class="lede fade" style="animation-delay:.4s">Every policy is a promise. Here's what the families I've worked with say about keeping theirs.</p>
     <!-- Placeholder figures: update with your real numbers -->
     <div class="stats reveal" style="--d:.2s">
-      <div class="stat"><b><span data-count="4.9">0</span><small>★</small></b><span>Average rating</span></div>
-      <div class="stat"><b><span data-count="250">0</span><small>+</small></b><span>Families protected</span></div>
-      <div class="stat"><b><span data-count="20">0</span><small>+</small></b><span>Carriers compared</span></div>
+      <div class="stat"><b><span data-count="4.9">4.9</span><small>★</small></b><span>Average rating</span></div>
+      <div class="stat"><b><span data-count="250">250</span><small>+</small></b><span>Families protected</span></div>
+      <div class="stat"><b><span data-count="20">20</span><small>+</small></b><span>Carriers compared</span></div>
     </div>
   </div>
 </section>
 
 <!-- ============ FEATURED STORY ============ -->
-<section class="section" style="padding-top:clamp(24px,4vh,40px)">
+<section class="section paper">
   <div class="container featured">
     <div class="reveal from-left">
         <div class="frame" style="--ratio:5/4">
           <div class="shot">
-            <div class="ph"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="12" width="38" height="28" rx="6"/><path d="M17 12l3-5h8l3 5"/><circle cx="24" cy="26" r="7"/></svg><span>Featured family photo</span><code>images/featured-family.jpg</code></div>
+            <div class="ph"><svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="12" width="38" height="28"/><path d="M17 12l3-5h8l3 5"/><circle cx="24" cy="26" r="7"/></svg><span>Featured family photo</span><code>images/featured-family.jpg</code></div>
             <img src="images/featured-family.jpg" alt="Featured client family" onerror="this.remove()">
           </div>
+          <span class="dim-v" aria-hidden="true"><b>1200 px</b></span>
+          <span class="dim-h" aria-hidden="true"><b>1500 px</b></span>
         </div>
     </div>
-    <div class="reveal from-right" style="--d:.1s;position:relative">
-      <span class="sample" style="position:static;display:inline-block;margin-bottom:1rem">Sample — replace</span>
-      <div class="stars" data-stars="5" style="margin-bottom:1rem"></div>
+    <div class="reveal from-right" style="--d:.1s">
+      <span class="sample">Sample — replace</span>
+      <div class="stars" data-stars="5" style="margin-bottom:.8rem"></div>
       <blockquote>We kept saying "next year." After one conversation, we had a plan that protects our girls and our home, for less than our phone bill.</blockquote>
       <div class="who"><span class="avatar">AF<img src="images/featured-avatar.jpg" alt="" onerror="this.remove()"></span><div><b>The Flores Family</b><small>Term life + mortgage protection</small></div></div>
     </div>
   </div>
 </section>
 
-<!-- ============ MARQUEE ============ -->
-<section style="padding:clamp(8px,2vh,20px) 0" aria-label="Short client comments">
+<!-- ============ MEASURING-TAPE MARQUEE ============ -->
+<section class="tape-band paper" aria-label="Short client comments">
   <div class="marquee" style="--dur:52s"><div class="track"><span class="pill"><i></i>“Made it so easy”</span><span class="pill"><i></i>“Answered every question”</span><span class="pill"><i></i>“Saved us $40/month”</span><span class="pill"><i></i>“Bilingual and patient”</span><span class="pill"><i></i>“Fast claim support”</span><span class="pill"><i></i>“No pressure at all”</span><span class="pill"><i></i>“Felt like family”</span><span class="pill"><i></i>“Highly recommend”</span></div></div>
   <div class="marquee rev" style="--dur:60s"><div class="track"><span class="pill"><i></i>“Highly recommend”</span><span class="pill"><i></i>“Felt like family”</span><span class="pill"><i></i>“No pressure at all”</span><span class="pill"><i></i>“Fast claim support”</span><span class="pill"><i></i>“Bilingual and patient”</span><span class="pill"><i></i>“Saved us $40/month”</span><span class="pill"><i></i>“Answered every question”</span><span class="pill"><i></i>“Made it so easy”</span></div></div>
 </section>
 
 <!-- ============ ALL REVIEWS ============ -->
-<section class="section">
+<section class="section paper">
   <div class="container">
     <div class="section-head center">
       <p class="eyebrow reveal">More stories</p>
@@ -82,62 +81,61 @@
     <div class="masonry">
         <article class="tcard reveal" style="--d:0.0s">
           <span class="sample">Sample — replace</span>
-          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>He explained everything in plain words and found us a policy that actually fits our budget. I finally feel like the kids are covered.</blockquote>
           <div class="who"><span class="avatar">MG<img src="images/client-1.jpg" alt="" onerror="this.remove()"></span><div><b>María G.</b><small>Mother of three · Term life</small></div></div>
         </article>
         <article class="tcard reveal" style="--d:0.1s">
           <span class="sample">Sample — replace</span>
-          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>I'd put this off for years. Five minutes on the form, one phone call, and it was done. No pressure at all.</blockquote>
           <div class="who"><span class="avatar">DR<img src="images/client-2.jpg" alt="" onerror="this.remove()"></span><div><b>Daniel R.</b><small>First-time buyer · Term life</small></div></div>
         </article>
         <article class="tcard reveal" style="--d:0.2s">
           <span class="sample">Sample — replace</span>
-          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>When my husband passed, the claim was handled quickly and with so much care. I'm grateful we planned ahead.</blockquote>
           <div class="who"><span class="avatar">RL<img src="images/client-3.jpg" alt="" onerror="this.remove()"></span><div><b>Rosa L.</b><small>Beneficiary · Whole life</small></div></div>
         </article>
         <article class="tcard reveal" style="--d:0.0s">
           <span class="sample">Sample — replace</span>
-          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>He compared more carriers than I knew existed and saved us almost $40 a month versus our old policy.</blockquote>
           <div class="who"><span class="avatar">JT<img src="images/client-4.jpg" alt="" onerror="this.remove()"></span><div><b>James & Ana T.</b><small>Homeowners · Mortgage protection</small></div></div>
         </article>
         <article class="tcard reveal" style="--d:0.1s">
           <span class="sample">Sample — replace</span>
-          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>Spoke to us in Spanish and English so my parents understood every detail. That meant a lot to our family.</blockquote>
           <div class="who"><span class="avatar">LM<img src="images/client-5.jpg" alt="" onerror="this.remove()"></span><div><b>Luis M.</b><small>Family plan · Final expense</small></div></div>
         </article>
         <article class="tcard reveal" style="--d:0.2s">
           <span class="sample">Sample — replace</span>
-          <span class="q" aria-hidden="true">&rdquo;</span>
           <div class="stars" data-stars="5"></div>
           <blockquote>Honest, patient, and always picks up the phone. I've sent my brother and two coworkers his way.</blockquote>
           <div class="who"><span class="avatar">KW<img src="images/client-6.jpg" alt="" onerror="this.remove()"></span><div><b>Karen W.</b><small>Small business owner · Term life</small></div></div>
         </article>
     </div>
 
-    <div class="cta reveal zoom" style="margin-top:clamp(64px,10vh,120px)">
-      <h2>Ready to write <em>your</em> story?</h2>
-      <p>Answer five quick questions and get a free, no-obligation quote.</p>
-      <a class="btn light" href="index.html">Get my free quote <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    <div class="cta print reveal zoom" style="margin-top:clamp(72px,11vh,130px)">
+      <div class="sheet-edge"></div>
+      <div class="door" aria-hidden="true"><svg viewBox="0 0 100 180"><rect class="light" x="12" y="10" width="76" height="160"/><path class="frm" d="M4 176V2H96V176M0 176H100"/><g class="leaf"><rect x="12" y="10" width="76" height="160"/><circle cx="76" cy="94" r="3" fill="none" stroke="#fff" stroke-width="1.6"/></g></svg></div>
+      <div>
+        <h2>Ready to write <em>your</em> story?</h2>
+        <p>Answer five quick questions and get a free, no-obligation quote.</p>
+        <a class="btn light" href="index.html">Get my free quote <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8h11M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg></a>
+      </div>
     </div>
   </div>
 </section>
-<footer class="site-footer">
+</main>
+<footer class="site-footer paper">
   <div class="container">
+    <span class="tb-brand">Verion Life</span>
     <span>© 2026 Verion Life. Licensed life insurance agent.</span>
     <span>Coverage subject to underwriting approval. · <a href="testimonials.html">Testimonials</a></span>
   </div>
 </footer>
-</div>
 <script src="config.js"></script>
 <script src="main.js"></script>
 </body>
