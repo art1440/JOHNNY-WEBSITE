@@ -436,6 +436,11 @@
   });
 
   /* ---------- Boot ---------- */
+  // no photo yet (or inline handlers blocked by the host): show initials / placeholder
+  $$('.avatar img, .arch-photo img').forEach(img => {
+    const fail = () => img.parentNode.classList.add('empty');
+    if (img.complete && !img.naturalWidth) fail(); else img.addEventListener('error', fail);
+  });
   const y = $('#year'); if (y) y.textContent = new Date().getFullYear();
   const urlLang = new URLSearchParams(location.search).get('lang');
   setLang(urlLang || store.get('lang') || 'es', false);
