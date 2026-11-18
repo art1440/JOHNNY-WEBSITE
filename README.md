@@ -1,6 +1,6 @@
 # Verion Life website
 
-Static site: `index.html` (home + qualifying form), `testimonials.html`, shared `styles.css` / `main.js`.
+Static site: `index.html` (home + qualifying form), shared `styles.css` / `main.js`.
 Host anywhere static (GitHub Pages: Settings → Pages → Deploy from `main`).
 
 ## Connect your CRM (one file: `config.js`)
