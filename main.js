@@ -47,7 +47,6 @@
 
   const valid = () => {
     const s = steps[i];
-    // every radio group in the step needs an answer (the scheduler has two: day + time)
     const groups = new Set([...s.querySelectorAll('input[type=radio]')].map(r => r.name));
     const range = s.querySelector('input[type=range]');
     if (range && !range.dataset.touched) return false;   // 1–10 meter: they have to actually pick
@@ -64,7 +63,6 @@
   };
   form.addEventListener('change', e => {
     if (e.target.type !== 'radio') return;
-    if (e.target.closest('[data-noauto]')) { next.disabled = !valid(); return; } // scheduler: let them watch the countdown
     next.disabled = false;
     setTimeout(() => { if (i < TOTAL - 1) { i++; render(); } }, 380);
   });
@@ -112,6 +110,7 @@
   let sending = false;
   let leadId = '';   // one id per submission, so a retry never creates a duplicate row
 
+  const CALL_WINDOWS = { morning: 'Mañana (9 am – 12 pm)', afternoon: 'Tarde (12 pm – 5 pm)', evening: 'Noche (5 pm – 8 pm)' };
   function buildLead() {
     const d = Object.fromEntries(new FormData(form));
     const [first_name, ...rest] = (d.name || '').trim().split(/\s+/);
@@ -122,7 +121,7 @@
       // IUL answers. Sent under the original column names too, so the Sheet/CRM keep working.
       interest: d.interest, savings_monthly: d.savings, priority: d.priority,
       protecting: d.interest, age_range: d.age, coverage_amount: d.savings,
-      ...callFields(),
+      call_window: d.call_window, call_local: CALL_WINDOWS[d.call_window] || '',
       source: CFG.LEAD_SOURCE, tags: ['website-lead', `savings:${d.savings}`, `priority:${d.priority}`],
       page: location.href, referrer: document.referrer || '',
       submitted_at: new Date().toISOString(),
@@ -191,174 +190,5 @@
   }
   back.addEventListener('click', () => { if (i > 0) { i--; render(); } });
 
-  /* ---------- Live call scheduler (step 4) ----------
-     Next 7 days (so every weekday is reachable) × time slots. Re-evaluated every
-     second, aligned to the wall clock: slots inside the lead window disable
-     themselves as time passes, and the countdown to the chosen slot ticks live. */
-  const SCHED = Object.assign({ start: 9, end: 19, step: 30, leadMinutes: 30 }, CFG.CALL_HOURS || {});
-  const daysEl = document.getElementById('days');
-  const timesEl = document.getElementById('times');
-  const pill = daysEl && daysEl.querySelector('.pill');
-  const rollEl = document.getElementById('roll');
-  const etaEl = document.getElementById('eta');
-  const etaK = document.getElementById('etaK');
-  const etaWhen = document.getElementById('etaWhen');
-  const nowClock = document.getElementById('nowClock');
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-  const pad = n => String(n).padStart(2, '0');
-  const dayKey = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-  const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
-  const fmt = (d, o) => cap(new Intl.DateTimeFormat('es', o).format(d).replace(/\./g, ''));
-  const h12 = m => { const h = Math.floor(m / 60), mm = m % 60; return { t: `${h % 12 || 12}:${pad(mm)}`, ap: h < 12 ? 'am' : 'pm' }; };
-  const slotMins = [];
-  for (let m = SCHED.start * 60; m <= SCHED.end * 60; m += SCHED.step) slotMins.push(m);
-  const slotDate = (key, m) => { const [y, mo, d] = key.split('-').map(Number); return new Date(y, mo - 1, d, Math.floor(m / 60), m % 60); };
-  const open = (key, m, now) => slotDate(key, m) - now >= SCHED.leadMinutes * 60000;
-  let todayKey = '';
-
-  function buildDays(now) {
-    todayKey = dayKey(now);
-    const keep = (daysEl.querySelector('input:checked') || {}).value;
-    daysEl.querySelectorAll('.day').forEach(n => n.remove());
-    for (let k = 0; k < 7; k++) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + k);
-      const key = dayKey(d);
-      const l = document.createElement('label');
-      l.className = 'day'; l.style.setProperty('--i', k);
-      l.innerHTML = `<input type="radio" name="callday" value="${key}"><span class="dw">${k === 0 ? 'Hoy' : fmt(d, { weekday: 'short' })}</span><span class="dn">${d.getDate()}</span>`;
-      l.firstChild.setAttribute('aria-label', fmt(d, { weekday: 'long', day: 'numeric', month: 'long' }));
-      if (key === keep) l.firstChild.checked = true;
-      daysEl.append(l);
-    }
-  }
-  function buildTimes() {
-    timesEl.innerHTML = slotMins.map(m => { const { t, ap } = h12(m); return `<label class="slot"><input type="radio" name="calltime" value="${pad(m / 60 | 0)}:${pad(m % 60)}" aria-label="${t} ${ap}"><span>${t}<small>${ap}</small></span></label>`; }).join('');
-  }
-  const pickedDay = () => daysEl.querySelector('input:checked');
-  const pickedTime = () => timesEl.querySelector('input:checked');
-
-  // sliding glass pill behind the chosen day (shared-element motion, not a re-styled chip)
-  function movePill(instant) {
-    const c = pickedDay(); if (!pill) return;
-    if (!c) { pill.style.opacity = 0; return; }
-    const l = c.parentElement;
-    if (instant) pill.style.transition = 'none';
-    pill.style.opacity = 1;
-    pill.style.width = l.offsetWidth + 'px';
-    pill.style.transform = `translateX(${l.offsetLeft}px)`;
-    if (instant) { pill.offsetWidth; pill.style.transition = ''; }
-  }
-  function scrollToSlot(smooth) {
-    const target = (pickedTime() || timesEl.querySelector('input:not(:disabled)') || {}).parentElement;
-    if (target) timesEl.scrollTo({ left: target.offsetLeft - 6, behavior: smooth && !reduce ? 'smooth' : 'auto' });
-  }
-
-  // odometer: each digit cell swaps with the new digit dropping in from above (time runs down)
-  let rollStr = '';
-  function setRoll(str) {
-    if (str.length !== rollStr.length) {
-      rollEl.innerHTML = [...str].map(ch => /\d/.test(ch) ? `<span class="dg"><span>${ch}</span></span>` : `<span class="sep">${ch}</span>`).join('');
-      rollStr = str; return;
-    }
-    const cells = rollEl.children;
-    let changed = 0;
-    [...str].forEach((ch, k) => {
-      if (ch === rollStr[k] || !/\d/.test(ch)) { if (!/\d/.test(ch)) cells[k].textContent = ch; return; }
-      const cell = cells[k];
-      while (cell.children.length > 1) cell.firstElementChild.remove(); // a digit still leaving from the last tick
-      const old = cell.lastElementChild, nu = document.createElement('span');
-      nu.textContent = ch; cell.append(nu);
-      if (reduce) { old.remove(); return; }
-      const delay = changed++ * 28; // left-to-right ripple when many digits change at once
-      const o = { duration: 420, delay, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' };
-      nu.animate([{ transform: 'translateY(-100%)', opacity: 0, filter: 'blur(2px)' }, { transform: 'none', opacity: 1, filter: 'blur(0)' }], o);
-      old.animate([{ transform: 'none', opacity: 1 }, { transform: 'translateY(90%)', opacity: 0, filter: 'blur(2px)' }], { ...o, fill: 'forwards' }).onfinish = () => old.remove();
-    });
-    rollStr = str;
-  }
-
-  // the message stays until they pick again; the shake replays each time
-  let warnMsg = '';
-  function warn(msg) {
-    warnMsg = msg;
-    etaEl.classList.remove('warn'); etaEl.offsetWidth; etaEl.classList.add('warn');
-  }
-
-  function update(fromUser) {
-    const now = new Date();
-    nowClock.textContent = `${pad(now.getHours() % 12 || 12)}:${pad(now.getMinutes())}:${pad(now.getSeconds())} ${now.getHours() < 12 ? 'am' : 'pm'}`;
-    if (dayKey(now) !== todayKey) { buildDays(now); movePill(true); }
-
-    // days: today greys out once its last slot is inside the lead window
-    daysEl.querySelectorAll('input').forEach(r => {
-      const full = !slotMins.some(m => open(r.value, m, now));
-      if (r.disabled !== full) r.disabled = full;
-      if (full && r.checked) {
-        r.checked = false;
-        const t = pickedTime(); if (t) t.checked = false; // don't silently move their call to tomorrow
-        warn('Hoy ya no quedan horarios, elija otro día');
-      }
-    });
-    if (!pickedDay()) { const f = daysEl.querySelector('input:not(:disabled)'); if (f) { f.checked = true; movePill(true); } }
-
-    // slots: disable the ones that have slipped into the past (live, every second)
-    const day = pickedDay().value;
-    timesEl.querySelectorAll('input').forEach(r => {
-      const [h, mm] = r.value.split(':').map(Number);
-      const gone = !open(day, h * 60 + mm, now);
-      if (r.disabled !== gone) r.disabled = gone;
-      if (gone && r.checked) { r.checked = false; if (fromUser !== 'day') warn('Ese horario acaba de pasar, elija otro'); }
-    });
-
-    const t = pickedTime();
-    if (t) {
-      const [h, mm] = t.value.split(':').map(Number);
-      const at = slotDate(day, h * 60 + mm);
-      let s = Math.max(0, Math.floor((at - now) / 1000));
-      const d = Math.floor(s / 86400); s -= d * 86400;
-      const hh = Math.floor(s / 3600); s -= hh * 3600;
-      const mi = Math.floor(s / 60); s -= mi * 60;
-      setRoll(`${d ? d + 'd\u00a0' : ''}${pad(hh)}:${pad(mi)}:${pad(s)}`);
-      etaK.textContent = 'Le llamamos en';
-      etaWhen.textContent = `${fmt(at, { weekday: 'short', day: 'numeric', month: 'short' })} · ${h12(h * 60 + mm).t} ${h12(h * 60 + mm).ap}`;
-      etaEl.classList.add('set');
-    } else {
-      etaEl.classList.remove('set');
-      etaK.textContent = warnMsg || 'Elija una hora';
-      etaWhen.textContent = ''; rollStr = ''; rollEl.innerHTML = '';
-    }
-    if (i === 3) next.disabled = !valid();
-    if (fromUser === 'day') scrollToSlot(true);
-  }
-
-  function callFields() {
-    const d = pickedDay(), t = pickedTime();
-    if (!d || !t) return {};
-    const [h, mm] = t.value.split(':').map(Number);
-    const at = slotDate(d.value, h * 60 + mm);
-    return {
-      call_date: d.value, call_time: t.value,
-      call_day: fmt(at, { weekday: 'long' }),
-      call_at: at.toISOString(), call_timezone: tz,
-      call_local: `${fmt(at, { weekday: 'long', day: 'numeric', month: 'long' })}, ${h12(h * 60 + mm).t} ${h12(h * 60 + mm).ap}`,
-    };
-  }
-
-  if (daysEl && timesEl) {
-    buildTimes(); buildDays(new Date());
-    daysEl.addEventListener('change', () => { movePill(); update('day'); });
-    timesEl.addEventListener('change', () => { warnMsg = ''; etaEl.classList.remove('warn'); update(); });
-    // vertical wheel scrolls the slot strip sideways, but only while it can move
-    timesEl.addEventListener('wheel', e => {
-      if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-      const max = timesEl.scrollWidth - timesEl.clientWidth;
-      if ((e.deltaY > 0 && timesEl.scrollLeft < max - 1) || (e.deltaY < 0 && timesEl.scrollLeft > 0)) { e.preventDefault(); timesEl.scrollLeft += e.deltaY; }
-    }, { passive: false });
-    addEventListener('resize', () => movePill(true));
-    // tick on the second boundary so the clock never drifts or skips
-    const tick = () => { update(); setTimeout(tick, 1000 - (Date.now() % 1000) + 8); };
-    tick(); movePill(true); scrollToSlot(false);
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) update(); });
-  }
   render();
 })();

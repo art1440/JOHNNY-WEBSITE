@@ -27,9 +27,4 @@ window.VERION_CONFIG = {
 
   /* Tag added to every lead so you can filter/automate on it in the CRM. */
   LEAD_SOURCE: "Verion Life website",
-
-  /* Call-time picker (form step 4), in the visitor's local time.
-     start/end = first and last slot hour (24h), step = minutes between slots,
-     leadMinutes = how soon a slot can be booked (slots closer than this disable live). */
-  CALL_HOURS: { start: 9, end: 19, step: 30, leadMinutes: 30 },
 };

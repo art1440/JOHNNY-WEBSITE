@@ -266,67 +266,36 @@ fieldset{border:0;min-width:0}
 .modal-box iframe{width:100%;height:100%;border:0}
 .modal-x{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px rgba(60,207,106,.25),0 4px 12px -6px rgba(10,42,20,.4);font-size:1.4rem;line-height:1;cursor:pointer;color:var(--ink)}
 
-/* ---------- Live call scheduler (step 4) ---------- */
 .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-.when-head{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem;margin-bottom:.85rem}
-.when-head h2{margin-bottom:0}
-.now{display:inline-flex;align-items:center;gap:.45rem;flex:none;font-family:var(--mono);font-size:.66rem;letter-spacing:.08em;color:var(--deeper);font-variant-numeric:tabular-nums}
-.now i{width:7px;height:7px;border-radius:50%;background:var(--cyan-2);box-shadow:0 0 0 0 rgba(152,255,152,.6);animation:beat 1s ease-out infinite}
-@keyframes beat{0%{box-shadow:0 0 0 0 rgba(152,255,152,.65)}80%,100%{box-shadow:0 0 0 7px rgba(152,255,152,0)}}
-.days{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;padding:.3rem;border-radius:18px;
-  background:rgba(255,255,255,.3);box-shadow:inset 0 1px 2px rgba(10,42,20,.08),inset 0 0 0 1px rgba(255,255,255,.7)}
-.days .pill{position:absolute;left:0;top:.3rem;bottom:.3rem;width:0;border-radius:13px;opacity:0;pointer-events:none;
-  background:linear-gradient(180deg,rgba(230,255,230,.95),rgba(205,255,205,.7));box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1.5px var(--cyan),0 8px 18px -8px rgba(110,235,125,.75);
-  transition:transform .55s var(--spring),width .55s var(--spring),opacity .3s}
-.day{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:.1rem;padding:.42rem 0;border-radius:13px;cursor:pointer;
-  transition:transform .35s var(--spring),opacity .3s,color .25s}
-.step.active .day{animation:fadeIn .45s var(--ease) backwards;animation-delay:calc(var(--i) * 35ms)}
-.day input,.slot input{position:absolute;opacity:0;pointer-events:none}
-.day .dw{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);transition:color .25s}
-.day .dn{font-size:1rem;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.1}
-.day:hover{transform:translateY(-1px)}
-.day:active{transform:scale(.94)}
-.day:has(input:checked) .dw{color:var(--deeper)}
-.day:has(input:disabled){opacity:.35;cursor:not-allowed;transform:none}
-.day:has(input:focus-visible),.slot:has(input:focus-visible){outline:2px solid var(--deeper);outline-offset:1px}
-.times{position:relative;display:grid;grid-template-rows:repeat(2,auto);grid-auto-flow:column;grid-auto-columns:max-content;gap:.4rem;margin:.6rem -2px 0;padding:4px 2px 6px;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;overscroll-behavior-x:contain;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 26px),transparent);mask-image:linear-gradient(90deg,transparent,#000 14px,#000 calc(100% - 26px),transparent)}
-.times::-webkit-scrollbar{display:none}
-.slot{position:relative;flex:none;scroll-snap-align:start;cursor:pointer;border-radius:12px;padding:.5rem .72rem;font-size:.86rem;font-variant-numeric:tabular-nums;white-space:nowrap;
-  background:rgba(255,255,255,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.7),0 4px 12px -8px rgba(60,207,106,.4);
-  transition:background .25s,box-shadow .25s,transform .35s var(--spring),opacity .5s,color .5s}
-.slot small{margin-left:.18rem;font-family:var(--mono);font-size:.6rem;color:var(--ink-3)}
-.slot:hover{background:rgba(255,255,255,.72);transform:translateY(-1px)}
-.slot:active{transform:scale(.95)}
-.slot:has(input:checked){background:linear-gradient(180deg,rgba(230,255,230,.95),rgba(205,255,205,.65));box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1.5px var(--cyan),0 8px 18px -8px rgba(110,235,125,.75)}
-.slot:has(input:checked) small{color:var(--deeper)}
-/* a slot that expires while you watch fades and gets struck through */
-.slot span{position:relative}
-.slot span::after{content:"";position:absolute;left:-2px;right:-2px;top:52%;height:1.5px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform .5s var(--ease)}
-.slot:has(input:disabled){opacity:.38;color:var(--ink-3);cursor:not-allowed;transform:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.55);background:rgba(255,255,255,.18)}
-.slot:has(input:disabled) span::after{transform:scaleX(1)}
-.eta{display:flex;align-items:center;flex-wrap:wrap;column-gap:.7rem;row-gap:.1rem;margin-top:auto;padding:.6rem .9rem;border-radius:16px;min-height:3.3rem;
-  background:rgba(255,255,255,.28);box-shadow:inset 0 0 0 1px rgba(255,255,255,.65);transition:background .4s,box-shadow .4s}
-.eta.set{background:linear-gradient(180deg,rgba(255,255,255,.55),rgba(230,255,230,.45));box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(152,255,152,.45),0 10px 24px -14px rgba(110,235,125,.8)}
-.eta-k{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);transition:color .3s}
-.eta.warn .eta-k{color:#c2412d}
-.eta.warn{animation:shake .4s}
-.roll{display:inline-flex;font-family:var(--mono);font-size:1.25rem;font-weight:500;line-height:1;letter-spacing:-.02em;color:var(--ink)}
-.roll .dg{position:relative;display:inline-grid;width:.62em;height:1.1em;overflow:hidden;
-  -webkit-mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(transparent,#000 22%,#000 78%,transparent)}
-.roll .dg > span{grid-area:1/1;display:flex;align-items:center;justify-content:center}
-.roll .sep{display:inline-flex;align-items:center;color:var(--ink-3);padding:0 .04em}
-.eta-when{flex-basis:100%;font-size:.78rem;color:var(--ink-2)}
-@media (max-width:860px){
-  .now{font-size:.6rem}
-  .day{padding:.34rem 0}.day .dn{font-size:.92rem}
-  .eta{padding:.5rem .8rem;min-height:3rem}.roll{font-size:1.1rem}
-}
-@media (max-height:700px) and (max-width:860px){
-  .when-head{margin-bottom:.55rem}
-  .times{margin-top:.4rem}.slot{padding:.4rem .6rem}
-  .eta{min-height:2.7rem;padding:.4rem .75rem}
-}
+
+/* ---------- Best time to call (step 5) ----------
+   Each option carries a tiny sky. Resting, it sits muted; picking it plays that
+   time of day once: the sun clears the horizon, the noon rays turn, the moon swings in. */
+.tod .opt{padding-right:3.4rem}
+.tod-t{display:flex;flex-direction:column;line-height:1.2}
+.tod-t small{font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;color:var(--ink-3);margin-top:.15rem;transition:color .3s}
+.tod .opt:has(input:checked) .tod-t small{color:var(--deeper)}
+.tod-i{position:absolute;right:1rem;top:50%;width:28px;height:28px;margin-top:-14px;overflow:visible;fill:none;stroke:var(--ink-3);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;
+  transition:stroke .3s,transform .5s var(--spring)}
+.tod .opt:hover .tod-i{transform:translateY(-1px) rotate(-4deg)}
+.tod .opt:has(input:checked) .tod-i{stroke:var(--deeper)}
+.tod .opt:has(input:checked) .tod-i circle,.tod .opt:has(input:checked) .moon .m path{fill:rgba(152,255,152,.55)}
+.tod-i circle,.moon .m path{transition:fill .4s}
+/* morning: sun rises out from behind the horizon line */
+.rise .sun{transform:translateY(-1px);transition:transform .7s var(--spring)}
+.rise .rays{opacity:0;transition:opacity .3s}
+.tod .opt:has(input:checked) .rise .sun{transform:translateY(-6px)}
+.tod .opt:has(input:checked) .rise .rays{opacity:1;transition-delay:.25s}
+/* afternoon: rays make a quarter turn and settle */
+.noon .rays{transform-origin:16px 16px;transition:transform .9s var(--ease)}
+.tod .opt:has(input:checked) .noon .rays{transform:rotate(90deg)}
+/* evening: moon swings in, stars blink on */
+.moon .m{transform-origin:16px 16px;transition:transform .7s var(--spring)}
+.moon .tw{opacity:0;transform-box:fill-box;transform-origin:center;transform:scale(.3);transition:opacity .3s,transform .45s var(--spring)}
+.tod .opt:has(input:checked) .moon .m{transform:rotate(-18deg)}
+.tod .opt:has(input:checked) .moon .t1{opacity:1;transform:none;transition-delay:.2s}
+.tod .opt:has(input:checked) .moon .t2{opacity:1;transform:none;transition-delay:.32s}
+@media (prefers-reduced-motion:reduce){.tod-i *,.tod-i{transition:none!important}}
 
 /* ---------- Responsive ---------- */
 @media (max-width:1100px){.shield{display:none}}

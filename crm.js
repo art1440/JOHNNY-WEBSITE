@@ -86,6 +86,7 @@
   const initials = l => ((l.first || '?')[0] + ((l.last || '')[0] || '')).toUpperCase();
   const shortName = l => l.first + (l.last ? ' ' + l.last[0] + '.' : '');
   // IUL form: 1–10, how important a more secure financial future is to them. Hot ≥ 8, warm 5–7, cool ≤ 4.
+  const CALL_WINDOW = { morning: 'Morning (9am–12pm)', afternoon: 'Afternoon (12–5pm)', evening: 'Evening (5–8pm)' };
   const prio = l => { const n = Math.round(+l.priority); return n >= 1 && n <= 10 ? n : 0; };
   const heat = n => n >= 8 ? 'hot' : n >= 5 ? 'warm' : 'cool';
   const HEAT_LABEL = { hot: 'Hot lead', warm: 'Interested', cool: 'Just looking' };
@@ -170,7 +171,8 @@
     return {
       id: String(w.id || 'w' + Date.parse(w.submitted_at)), first, last: rest.join(' ') || w.last_name || '', phone: String(w.phone || ''), email: String(w.email || ''),
       protect: w.protecting, age: w.age_range, coverage: w.coverage_amount, tobacco: w.tobacco, priority: w.priority, source: 'website', status: 'new',
-      requested: Date.parse(w.call_at) || undefined, // call time the client picked on the form
+      requested: Date.parse(w.call_at) || undefined, // older leads: exact call time picked on the form
+      callWindow: w.call_window || '',                  // best time to call: morning / afternoon / evening
       created: Date.parse(w.submitted_at) || Date.now(), note: '', live: true,
     };
   };
@@ -379,6 +381,7 @@
       </div>` : '';
     if (l.appt && l.status === 'booked') facts.splice(0, 0, ['Call', apptLabel(l.appt)]);
     else if (l.requested) facts.splice(0, 0, ['Wants a call', apptLabel(l.requested)]);
+    else if (CALL_WINDOW[l.callWindow]) facts.splice(0, 0, ['Best time to call', CALL_WINDOW[l.callWindow]]);
     return `<div class="d-in">
       <div class="d-head" data-d>
         <span class="av">${esc(initials(l))}</span>
