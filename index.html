@@ -130,15 +130,15 @@
           </div>
         </fieldset>
 
-        <!-- 6: state (type to filter; list built by main.js) -->
+        <!-- 6: state dropdown (options filled by main.js) -->
         <fieldset class="step state" data-step="6">
           <h2>¿En qué estado vive?</h2>
-          <div class="st-search">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.6" stroke="currentColor" stroke-width="1.6"/><path d="m10.5 10.5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-            <input type="text" id="stQ" placeholder="Escriba su estado…" autocomplete="off" aria-label="Buscar estado" aria-controls="stList">
+          <div class="sel">
+            <select id="state" name="state" aria-label="Estado" autocomplete="address-level1">
+              <option value="" disabled selected>Seleccione su estado</option>
+            </select>
+            <svg class="chev" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
-          <div class="st-list" id="stList" role="radiogroup" aria-label="Estado"></div>
-          <p class="st-none" id="stNone" hidden>No encontramos ese estado</p>
         </fieldset>
 
         <!-- 7 -->

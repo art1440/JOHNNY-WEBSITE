@@ -50,6 +50,8 @@
     const groups = new Set([...s.querySelectorAll('input[type=radio]')].map(r => r.name));
     const range = s.querySelector('input[type=range]');
     if (range && !range.dataset.touched) return false;   // 1–10 meter: they have to actually pick
+    const sel = s.querySelector('select');
+    if (sel && !sel.value) return false;
     return [...groups].every(n => s.querySelector(`input[name="${n}"]:checked`));
   };
   const render = () => {
@@ -62,7 +64,10 @@
     if (i >= TOTAL) { document.getElementById('nav').style.display = 'none'; document.getElementById('fine').style.display = 'none'; }
   };
   form.addEventListener('change', e => {
-    if (e.target.type !== 'radio') return;
+    if (e.target.tagName === 'SELECT') { // dropdown: mark it picked, then move on like a tapped option
+      const box = e.target.parentElement; box.classList.remove('picked'); void box.offsetWidth; box.classList.add('picked');
+      if (!valid()) return;
+    } else if (e.target.type !== 'radio') return;
     next.disabled = false;
     setTimeout(() => { if (i < TOTAL - 1) { i++; render(); } }, 380);
   });
@@ -91,37 +96,10 @@
     paint();
   }
 
-  /* ---------- State picker: type to filter, tap (or Enter on a single match) to pick ---------- */
+  /* ---------- State dropdown ---------- */
   const STATES = [['AL','Alabama'],['AK','Alaska'],['AZ','Arizona'],['AR','Arkansas'],['CA','California'],['CO','Colorado'],['CT','Connecticut'],['DE','Delaware'],['DC','District of Columbia'],['FL','Florida'],['GA','Georgia'],['HI','Hawaii'],['ID','Idaho'],['IL','Illinois'],['IN','Indiana'],['IA','Iowa'],['KS','Kansas'],['KY','Kentucky'],['LA','Louisiana'],['ME','Maine'],['MD','Maryland'],['MA','Massachusetts'],['MI','Michigan'],['MN','Minnesota'],['MS','Mississippi'],['MO','Missouri'],['MT','Montana'],['NE','Nebraska'],['NV','Nevada'],['NH','New Hampshire'],['NJ','New Jersey'],['NM','New Mexico'],['NY','New York'],['NC','North Carolina'],['ND','North Dakota'],['OH','Ohio'],['OK','Oklahoma'],['OR','Oregon'],['PA','Pennsylvania'],['PR','Puerto Rico'],['RI','Rhode Island'],['SC','South Carolina'],['SD','South Dakota'],['TN','Tennessee'],['TX','Texas'],['UT','Utah'],['VT','Vermont'],['VA','Virginia'],['WA','Washington'],['WV','West Virginia'],['WI','Wisconsin'],['WY','Wyoming']];
-  // Spanish names people may type, so "nueva york" or "carolina del norte" still finds it
-  const ES = { NY: 'nueva york', NJ: 'nueva jersey', NM: 'nuevo mexico', NH: 'nuevo hampshire', NC: 'carolina del norte', SC: 'carolina del sur', ND: 'dakota del norte', SD: 'dakota del sur', PA: 'pensilvania', LA: 'luisiana', HI: 'hawai', WV: 'virginia occidental', DC: 'distrito de columbia washington dc' };
-  const stList = document.getElementById('stList'), stQ = document.getElementById('stQ'), stNone = document.getElementById('stNone');
-  if (stList && stQ) {
-    const norm = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
-    stList.innerHTML = STATES.map(([c, n]) => `<label class="st" data-k="${norm(`${n} ${c} ${ES[c] || ''}`)}"><input type="radio" name="state" value="${c}"><span>${n}</span><small>${c}</small></label>`).join('');
-    const items = [...stList.children];
-    stQ.addEventListener('input', () => {
-      const q = norm(stQ.value);
-      let shown = 0;
-      items.forEach(l => {
-        const hit = !q || l.dataset.k.split(' ').some(w => w.startsWith(q)) || l.dataset.k.includes(q) || (q.length === 2 && l.querySelector('input').value.toLowerCase() === q);
-        if (hit === !l.hidden) { if (hit) shown++; return; }
-        l.hidden = !hit;
-        if (hit && !reduce) l.animate([{ opacity: 0, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 260, delay: Math.min(shown, 8) * 18, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
-        if (hit) shown++;
-      });
-      stNone.hidden = shown > 0;
-      stList.scrollTop = 0;
-    });
-    stQ.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return;
-      const vis = items.filter(l => !l.hidden);
-      if (vis.length === 1 || (vis.length && norm(stQ.value).length >= 3)) {
-        e.preventDefault();
-        const r = vis[0].querySelector('input'); r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-    });
-  }
+  const stateSel = document.getElementById('state');
+  if (stateSel) stateSel.insertAdjacentHTML('beforeend', STATES.map(([c, n]) => `<option value="${c}">${n}</option>`).join(''));
 
   form.addEventListener('submit', e => {
     e.preventDefault();
