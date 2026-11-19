@@ -17,10 +17,11 @@ const COLS = ['id', 'submitted_at', 'full_name', 'first_name', 'last_name', 'pho
   'source', 'page', 'referrer', 'utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'updated_at',
   'call_at', 'call_local', 'call_timezone',    // older leads: exact call time picked on the form
   'priority',                                  // IUL form: 1–10, how important a secure financial future is
-  'call_window'];                              // best time to call: morning / afternoon / evening
+  'call_window',                               // best time to call: morning / afternoon / evening
+  'state'];                                    // two-letter US state code
 const FROM_FORM = ['full_name', 'first_name', 'last_name', 'phone', 'email', 'protecting', 'age_range',
   'coverage_amount', 'tobacco', 'source', 'page', 'referrer', 'utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid',
-  'call_at', 'call_local', 'call_timezone', 'priority', 'call_window'];
+  'call_at', 'call_local', 'call_timezone', 'priority', 'call_window', 'state'];
 const STAGES = ['new', 'contacted', 'booked', 'lost'];
 
 function setup() {

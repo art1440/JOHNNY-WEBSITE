@@ -172,6 +172,7 @@
       id: String(w.id || 'w' + Date.parse(w.submitted_at)), first, last: rest.join(' ') || w.last_name || '', phone: String(w.phone || ''), email: String(w.email || ''),
       protect: w.protecting, age: w.age_range, coverage: w.coverage_amount, tobacco: w.tobacco, priority: w.priority, source: 'website', status: 'new',
       requested: Date.parse(w.call_at) || undefined, // older leads: exact call time picked on the form
+      state: w.state || '',
       callWindow: w.call_window || '',                  // best time to call: morning / afternoon / evening
       created: Date.parse(w.submitted_at) || Date.now(), note: '', live: true,
     };
@@ -371,6 +372,7 @@
         ? [['Interested in', PROTECT[l.protect]], ['Age range', l.age], ['Can save', COVER[l.coverage]]]
         : [['Protecting', PROTECT[l.protect]], ['Age range', l.age], ['Coverage', COVER[l.coverage]]]),
       ...(l.tobacco ? [['Tobacco (12 mo)', l.tobacco === 'yes' ? 'Yes' : l.tobacco === 'no' ? 'No' : 'Ask on call']] : []), // older term-life leads only
+      ...(l.state ? [['State', l.state]] : []),
       ['Source', SRC[l.source][0]], ['Est. premium', money(l.premium) + ' / yr'],
     ];
     const n = prio(l), h = heat(n);

@@ -67,7 +67,7 @@
     </svg>
     <form class="card lg" id="quote" novalidate>
       <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
-      <div class="progress"><span id="count">Paso 1 de 6</span><div class="bar"><i id="bar"></i></div></div>
+      <div class="progress"><span id="count">Paso 1 de 7</span><div class="bar"><i id="bar"></i></div></div>
 
       <div class="steps">
         <!-- 1 -->
@@ -130,8 +130,19 @@
           </div>
         </fieldset>
 
-        <!-- 6 -->
-        <fieldset class="step" data-step="6">
+        <!-- 6: state (type to filter; list built by main.js) -->
+        <fieldset class="step state" data-step="6">
+          <h2>¿En qué estado vive?</h2>
+          <div class="st-search">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.6" stroke="currentColor" stroke-width="1.6"/><path d="m10.5 10.5 3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            <input type="text" id="stQ" placeholder="Escriba su estado…" autocomplete="off" aria-label="Buscar estado" aria-controls="stList">
+          </div>
+          <div class="st-list" id="stList" role="radiogroup" aria-label="Estado"></div>
+          <p class="st-none" id="stNone" hidden>No encontramos ese estado</p>
+        </fieldset>
+
+        <!-- 7 -->
+        <fieldset class="step" data-step="7">
           <h2>¿A dónde le enviamos su cotización?</h2>
           <div class="opts stagger">
             <div class="field"><label for="name">Nombre completo</label><input id="name" name="name" autocomplete="name" placeholder="Jane Smith" required></div>
@@ -141,7 +152,7 @@
         </fieldset>
 
         <!-- done -->
-        <div class="step done" data-step="7">
+        <div class="step done" data-step="8">
           <svg class="check" viewBox="0 0 72 72"><circle cx="36" cy="36" r="34"/><path d="M23 37l9 9 17-19"/></svg>
           <h2>¡Todo listo!</h2>
           <p>Revisaremos sus respuestas y nos comunicaremos con usted dentro de un día hábil con sus mejores opciones.</p>
