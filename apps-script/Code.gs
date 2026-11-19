@@ -12,10 +12,11 @@ const SHEET_NAME = 'Leads';
 const COLS = ['id', 'submitted_at', 'full_name', 'first_name', 'last_name', 'phone', 'email',
   'protecting', 'age_range', 'coverage_amount', 'tobacco', 'status', 'note', 'appt', 'activity',
   'source', 'page', 'referrer', 'utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid', 'updated_at',
-  'call_at', 'call_local', 'call_timezone'];   // the call time the client picked on the form
+  'call_at', 'call_local', 'call_timezone',    // the call time the client picked on the form
+  'priority'];                                 // IUL form: 1–10, how important a secure financial future is
 const FROM_FORM = ['full_name', 'first_name', 'last_name', 'phone', 'email', 'protecting', 'age_range',
   'coverage_amount', 'tobacco', 'source', 'page', 'referrer', 'utm_source', 'utm_medium', 'utm_campaign', 'gclid', 'fbclid',
-  'call_at', 'call_local', 'call_timezone'];
+  'call_at', 'call_local', 'call_timezone', 'priority'];
 const STAGES = ['new', 'contacted', 'booked', 'lost'];
 
 function setup() {

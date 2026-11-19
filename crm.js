@@ -60,8 +60,12 @@
   const fillIcons = (root = document) => $$('[data-i]', root).forEach(e => { if (!e.firstChild) e.innerHTML = ic(e.dataset.i); });
 
   /* ---------- Vocabulary (matches the website form's fields) ---------- */
-  const PROTECT = { family: 'Spouse & kids', spouse: 'Spouse / partner', 'final-expenses': 'Final expenses', mortgage: 'Mortgage / debts' };
-  const COVER = { '<100k': 'Under $100k', '100-250k': '$100k–$250k', '250-500k': '$250k–$500k', '500k+': '$500k+' };
+  const PROTECT = { family: 'Spouse & kids', spouse: 'Spouse / partner', 'final-expenses': 'Final expenses', mortgage: 'Mortgage / debts',
+    // IUL form (current)
+    'life-insurance': 'Life insurance', 'grow-savings': 'Save & grow money', 'living-benefits': 'Living benefits', 'all-3': 'All 3 benefits' };
+  const COVER = { '<100k': 'Under $100k', '100-250k': '$100k–$250k', '250-500k': '$250k–$500k', '500k+': '$500k+',
+    '100-200': '$100–$200/mo', '200-300': '$200–$300/mo', '300-400': '$300–$400/mo', '500+': '$500+/mo' };
+  const SAVE_MID = { '100-200': 150, '200-300': 250, '300-400': 350, '500+': 550 };   // monthly IUL contribution
   const COVER_MID = { '<100k': 50000, '100-250k': 175000, '250-500k': 375000, '500k+': 600000 };
   const RATE = { '18-34': .55, '35-49': 1, '50-64': 2.6, '65+': 6.5 };   // rough $/yr per $1k of term coverage
   const SRC = {
@@ -72,6 +76,7 @@
   const STAGE_LABEL = { new: 'New', contacted: 'Contacted', booked: 'Booked', lost: 'Lost' };
 
   const premium = l => {
+    if (SAVE_MID[l.coverage]) return SAVE_MID[l.coverage] * 12;   // IUL lead: they told us the monthly amount
     let p = COVER_MID[l.coverage] / 1000 * RATE[l.age] * (l.tobacco === 'yes' ? 2.4 : 1);
     if (l.protect === 'final-expenses') p = Math.min(COVER_MID[l.coverage], 25000) / 1000 * RATE[l.age] * 6;
     return Number.isFinite(p) ? Math.max(120, Math.round(p / 5) * 5) : 0;
@@ -150,7 +155,7 @@
     const [first, ...rest] = (w.full_name || w.first_name || 'Website lead').trim().split(/\s+/);
     return {
       id: String(w.id || 'w' + Date.parse(w.submitted_at)), first, last: rest.join(' ') || w.last_name || '', phone: String(w.phone || ''), email: String(w.email || ''),
-      protect: w.protecting, age: w.age_range, coverage: w.coverage_amount, tobacco: w.tobacco, source: 'website', status: 'new',
+      protect: w.protecting, age: w.age_range, coverage: w.coverage_amount, tobacco: w.tobacco, priority: w.priority, source: 'website', status: 'new',
       requested: Date.parse(w.call_at) || undefined, // call time the client picked on the form
       created: Date.parse(w.submitted_at) || Date.now(), note: '', live: true,
     };
@@ -340,7 +345,9 @@
   let detailToken = 0;
   function detailHTML(l) {
     const facts = [
-      ['Protecting', PROTECT[l.protect]], ['Age range', l.age], ['Coverage', COVER[l.coverage]],
+      ...(SAVE_MID[l.coverage]
+        ? [['Interest', PROTECT[l.protect]], ['Age range', l.age], ['Monthly savings', COVER[l.coverage]], ['Priority', l.priority ? l.priority + ' / 10' : '—']]
+        : [['Protecting', PROTECT[l.protect]], ['Age range', l.age], ['Coverage', COVER[l.coverage]]]),
       ['Tobacco (12 mo)', l.tobacco === 'yes' ? 'Yes' : l.tobacco === 'no' ? 'No' : 'Ask on call'], ['Source', SRC[l.source][0]], ['Est. premium', money(l.premium) + ' / yr'],
     ];
     if (l.appt && l.status === 'booked') facts.splice(0, 0, ['Call', apptLabel(l.appt)]);

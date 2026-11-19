@@ -42,13 +42,15 @@
   const back = document.getElementById('back');
   const bar = document.getElementById('bar');
   const countEl = document.getElementById('count');
-  const TOTAL = 5;
+  const TOTAL = 6;
   let i = 0;
 
   const valid = () => {
     const s = steps[i];
     // every radio group in the step needs an answer (the scheduler has two: day + time)
     const groups = new Set([...s.querySelectorAll('input[type=radio]')].map(r => r.name));
+    const range = s.querySelector('input[type=range]');
+    if (range && !range.dataset.touched) return false;   // 1–10 meter: they have to actually pick
     return [...groups].every(n => s.querySelector(`input[name="${n}"]:checked`));
   };
   const render = () => {
@@ -66,6 +68,31 @@
     next.disabled = false;
     setTimeout(() => { if (i < TOTAL - 1) { i++; render(); } }, 380);
   });
+  /* ---------- 1–10 importance meter ---------- */
+  const prio = document.getElementById('priority');
+  if (prio) {
+    const meter = document.getElementById('meter'), nEl = document.getElementById('prioN'), wEl = document.getElementById('prioW');
+    const word = v => v <= 3 ? 'Poco importante' : v <= 6 ? 'Algo importante' : v <= 8 ? 'Importante' : '¡Muy importante!';
+    const paint = () => {
+      const v = +prio.value;
+      meter.style.setProperty('--p', ((v - 1) / 9 * 100) + '%');
+      meter.style.setProperty('--heat', (v - 1) / 9);
+      nEl.textContent = v;
+      prio.setAttribute('aria-valuetext', `${v} de 10, ${word(v).replace(/[¡!]/g, '')}`);
+      if (prio.dataset.touched) wEl.textContent = word(v);
+      [...meter.querySelectorAll('.meter-ticks i')].forEach((t, k) => t.classList.toggle('on', k < v));
+    };
+    let last = +prio.value;
+    prio.addEventListener('input', () => {
+      if (!prio.dataset.touched) { prio.dataset.touched = '1'; meter.classList.add('touched'); }
+      paint();
+      if (+prio.value !== last && !reduce) { nEl.classList.remove('pop'); void nEl.offsetWidth; nEl.classList.add('pop'); }
+      last = +prio.value;
+      next.disabled = !valid();
+    });
+    paint();
+  }
+
   form.addEventListener('submit', e => {
     e.preventDefault();
     if (i < TOTAL - 1) { if (valid()) { i++; render(); } return; }
@@ -92,9 +119,11 @@
     const lead = {
       first_name, last_name: rest.join(' '), full_name: (d.name || '').trim(),
       phone: d.phone.trim(), email: d.email.trim(),
-      protecting: d.protect, age_range: d.age, coverage_amount: d.coverage,
+      // IUL answers. Sent under the original column names too, so the Sheet/CRM keep working.
+      interest: d.interest, savings_monthly: d.savings, priority: d.priority,
+      protecting: d.interest, age_range: d.age, coverage_amount: d.savings,
       ...callFields(),
-      source: CFG.LEAD_SOURCE, tags: ['website-lead', `coverage:${d.coverage}`],
+      source: CFG.LEAD_SOURCE, tags: ['website-lead', `savings:${d.savings}`, `priority:${d.priority}`],
       page: location.href, referrer: document.referrer || '',
       submitted_at: new Date().toISOString(),
     };

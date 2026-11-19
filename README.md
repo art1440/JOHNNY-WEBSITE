@@ -17,12 +17,13 @@ Each submission sends **one** form-encoded POST with these fields:
 |---|---|
 | `first_name`, `last_name`, `full_name` | Jane / Smith / Jane Smith |
 | `phone`, `email` | (555) 123-4567 / jane@example.com |
-| `protecting` | family · spouse · final-expenses · mortgage |
+| `interest` (also sent as `protecting`) | life-insurance · grow-savings · living-benefits · all-3 |
 | `age_range` | 18-34 · 35-49 · 50-64 · 65+ |
-| `coverage_amount` | <100k · 100-250k · 250-500k · 500k+ |
+| `savings_monthly` (also sent as `coverage_amount`) | 100-200 · 200-300 · 300-400 · 500+ |
+| `priority` | 1–10: how important building a more secure financial future is |
 | `call_date`, `call_time`, `call_day` | 2026-11-20 / 10:30 / viernes |
 | `call_at`, `call_timezone`, `call_local` | ISO UTC time / America/New_York / viernes, 20 de noviembre, 10:30 am |
-| `source`, `tags` | Verion Life website / website-lead,coverage:250-500k |
+| `source`, `tags` | Verion Life website / website-lead,savings:200-300,priority:8 |
 | `page`, `referrer`, `submitted_at` | page URL, referring site, ISO timestamp |
 | `utm_*`, `gclid`, `fbclid` | only when present in the page URL (ad tracking) |
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Verion Life | Seguro de Vida</title>
-<meta name="description" content="Proteja el legado de su familia. Responda cinco preguntas rápidas para obtener una cotización de seguro de vida gratuita y sin compromiso de una agencia con licencia.">
+<meta name="description" content="Proteja el legado de su familia. Responda unas preguntas rápidas para obtener una cotización de seguro de vida gratuita y sin compromiso de una agencia con licencia.">
 <script>document.documentElement.className="js"+(/Chrome\//.test(navigator.userAgent)?" refract":"")</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,7 +46,7 @@
         <span class="line" aria-hidden="true"><span>que protege</span></span>
         <span class="line" aria-hidden="true"><span>a <em class="rot"><span class="rot-w is-on">su familia.</span><span class="rot-w">sus hijos.</span><span class="rot-w">su hogar.</span><span class="rot-w">su futuro.</span><span class="rot-w">su legado.</span></em></span></span>
       </h1>
-      <p class="lede fade" style="animation-delay:.5s">En Verion Life comparamos más de 20 aseguradoras mejor calificadas para encontrar la cobertura adecuada al menor precio. Cinco preguntas, sin presión, sin compromiso.</p>
+      <p class="lede fade" style="animation-delay:.5s">En Verion Life comparamos más de 20 aseguradoras mejor calificadas para encontrar la cobertura adecuada al menor precio. Seis pasos, sin presión, sin compromiso.</p>
       <div class="trust fade" style="animation-delay:.7s">
         <div><b>60s</b> para calificar</div>
         <div><b>20+</b> aseguradoras comparadas</div>
@@ -67,17 +67,17 @@
     </svg>
     <form class="card lg" id="quote" novalidate>
       <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
-      <div class="progress"><span id="count">Paso 1 de 5</span><div class="bar"><i id="bar"></i></div></div>
+      <div class="progress"><span id="count">Paso 1 de 6</span><div class="bar"><i id="bar"></i></div></div>
 
       <div class="steps">
         <!-- 1 -->
         <fieldset class="step active" data-step="1">
-          <h2>¿A quién busca proteger?</h2>
+          <h2>¿Qué le interesa más de la IUL?</h2>
           <div class="opts stagger">
-            <label class="opt"><input type="radio" name="protect" value="family"><span class="dot"></span>Mi cónyuge e hijos</label>
-            <label class="opt"><input type="radio" name="protect" value="spouse"><span class="dot"></span>Mi cónyuge o pareja</label>
-            <label class="opt"><input type="radio" name="protect" value="final-expenses"><span class="dot"></span>Cubrir gastos finales</label>
-            <label class="opt"><input type="radio" name="protect" value="mortgage"><span class="dot"></span>Pagar mi hipoteca / deudas</label>
+            <label class="opt"><input type="radio" name="interest" value="life-insurance"><span class="dot"></span>Seguro de vida</label>
+            <label class="opt"><input type="radio" name="interest" value="grow-savings"><span class="dot"></span>Ahorrar y crecer mi dinero</label>
+            <label class="opt"><input type="radio" name="interest" value="living-benefits"><span class="dot"></span>Beneficios en vida</label>
+            <label class="opt"><input type="radio" name="interest" value="all-3"><span class="dot"></span>Los 3 beneficios</label>
           </div>
         </fieldset>
 
@@ -94,17 +94,28 @@
 
         <!-- 3 -->
         <fieldset class="step" data-step="3">
-          <h2>¿Cuánta cobertura está considerando?</h2>
+          <h2>¿Cuánto le gustaría ahorrar al mes?</h2>
           <div class="opts two stagger">
-            <label class="opt"><input type="radio" name="coverage" value="<100k"><span class="dot"></span>Menos de $100k</label>
-            <label class="opt"><input type="radio" name="coverage" value="100-250k"><span class="dot"></span>$100k – $250k</label>
-            <label class="opt"><input type="radio" name="coverage" value="250-500k"><span class="dot"></span>$250k – $500k</label>
-            <label class="opt"><input type="radio" name="coverage" value="500k+"><span class="dot"></span>$500k +</label>
+            <label class="opt"><input type="radio" name="savings" value="100-200"><span class="dot"></span>$100 – $200</label>
+            <label class="opt"><input type="radio" name="savings" value="200-300"><span class="dot"></span>$200 – $300</label>
+            <label class="opt"><input type="radio" name="savings" value="300-400"><span class="dot"></span>$300 – $400</label>
+            <label class="opt"><input type="radio" name="savings" value="500+"><span class="dot"></span>$500 +</label>
           </div>
         </fieldset>
 
-        <!-- 4: live call scheduler (built + ticked every second by main.js) -->
-        <fieldset class="step when" data-step="4" data-noauto>
+        <!-- 4: 1–10 importance meter (Continue unlocks once they move it) -->
+        <fieldset class="step rate" data-step="4" data-noauto>
+          <h2>¿Qué tan importante es para usted comenzar a construir un futuro financiero más seguro?</h2>
+          <div class="meter" id="meter">
+            <div class="meter-read" aria-hidden="true"><output class="meter-n" id="prioN">5</output><span class="meter-w" id="prioW">Deslice para elegir</span></div>
+            <input type="range" id="priority" name="priority" min="1" max="10" step="1" value="5" aria-label="Importancia, del 1 al 10" aria-valuetext="5 de 10">
+            <div class="meter-ticks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="meter-ends" aria-hidden="true"><span>1 · Poco</span><span>10 · Muy importante</span></div>
+          </div>
+        </fieldset>
+
+        <!-- 5: live call scheduler (built + ticked every second by main.js) -->
+        <fieldset class="step when" data-step="5" data-noauto>
           <legend class="sr">Elija un día y una hora para su llamada</legend>
           <div class="when-head">
             <h2>¿Cuándo le llamamos?</h2>
@@ -119,8 +130,8 @@
           </div>
         </fieldset>
 
-        <!-- 5 -->
-        <fieldset class="step" data-step="5">
+        <!-- 6 -->
+        <fieldset class="step" data-step="6">
           <h2>¿A dónde le enviamos su cotización?</h2>
           <div class="opts stagger">
             <div class="field"><label for="name">Nombre completo</label><input id="name" name="name" autocomplete="name" placeholder="Jane Smith" required></div>
@@ -130,7 +141,7 @@
         </fieldset>
 
         <!-- done -->
-        <div class="step done" data-step="6">
+        <div class="step done" data-step="7">
           <svg class="check" viewBox="0 0 72 72"><circle cx="36" cy="36" r="34"/><path d="M23 37l9 9 17-19"/></svg>
           <h2>¡Todo listo!</h2>
           <p>Revisaremos sus respuestas y nos comunicaremos con usted dentro de un día hábil con sus mejores opciones.</p>
