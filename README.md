@@ -38,7 +38,7 @@ Linked from the site footer ("Panel del agente"), hidden from search engines.
 - **Demo** (`DASHBOARD_API_URL` empty): sample leads, *Live demo* button simulates a new lead. Nothing is saved anywhere but the viewer's browser.
 - **Live** (`DASHBOARD_API_URL` set): every quote sent from the website is saved to a Google Sheet and appears on the
   dashboard within 20 seconds (click the green *Live* pill to refresh right away). Stage, notes and call times are saved back
-  to the sheet, so any device sees the same thing. The dashboard asks for a key once per device.
+  to the sheet, so any device sees the same thing. Sign in with a username and password; each device stays signed in.
   Texts and review requests are still demo only: nothing is actually sent.
 
 ### Leads on the dashboard: one-time Google Sheet setup (about 5 minutes)
@@ -50,7 +50,12 @@ Linked from the site footer ("Panel del agente"), hidden from search engines.
 4. **Deploy → New deployment →** gear icon **→ Web app**. *Execute as:* **Me**. *Who has access:* **Anyone**. Click **Deploy** and copy the **Web app URL** (ends in `/exec`).
    ("Anyone" is needed so website visitors can submit the form. Reading leads always needs the key.)
 5. Paste that URL into `DASHBOARD_API_URL` in `config.js`, commit and push.
-6. Open `crm.html`, enter the key. Done: submit a test quote on the website and watch it arrive.
+6. Reload the Sheet. A **Verion dashboard** menu appears: **Add or change a login** → pick a username and password.
+7. Open `crm.html` and sign in. Done: submit a test quote on the website and watch it arrive.
+
+**Logins** (Sheet menu *Verion dashboard*): add or change a login, remove one, list them, or *Sign out every device*
+(issues a new internal key, so everyone has to sign in again). Passwords are stored only as salted hashes in the
+script's properties, never in the sheet. 5 wrong passwords lock that username for 10 minutes.
 
 If you change `Code.gs` later, use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
 Keep the `id` column in the sheet; you can add, hide or reorder other columns freely.

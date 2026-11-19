@@ -871,7 +871,7 @@
       setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
       if (manual && !arrived) toast('Up to date', 'Synced with your Google Sheet', 'check');
     } catch (e) {
-      if (e.auth) { forgetKey(); lockScreen('That key no longer works. Enter the current one.'); }
+      if (e.auth) { forgetKey(); lockScreen('You were signed out. Sign in again.'); }
       else { setSync('err', 'Can’t reach your Google Sheet right now'); if (manual) toast('Can’t reach your sheet', 'Check your connection', 'lost'); }
     } finally { polling = false; }
   }
@@ -889,34 +889,48 @@
       setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
       clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) poll(); }, 20000);
     } catch (e) {
-      if (e.auth) { forgetKey(); lockScreen('That key didn’t work.'); }
+      if (e.auth) { forgetKey(); lockScreen('You were signed out. Sign in again.'); }
       else { setSync('err', 'Can’t reach your Google Sheet'); toast('Can’t reach your Google Sheet', 'Check DASHBOARD_API_URL in config.js', 'lost'); }
     }
   }
   document.addEventListener('visibilitychange', () => { if (LIVE_MODE && apiKey && !document.hidden) poll(); });
 
+  // username + password → the server hands back the dashboard key, which this device remembers
+  async function signIn(user, pass) {
+    const r = await fetch(API, { method: 'POST', body: new URLSearchParams({ action: 'login', user, pass }) });
+    return r.json();
+  }
+  const LOGIN_ERR = { bad: 'Wrong username or password.', locked: 'Too many tries. Wait 10 minutes and try again.', setup: 'The dashboard isn’t set up yet. Run setup in Apps Script.' };
+
   function lockScreen(msg = '') {
     if ($('.lock')) return;
     const w = document.createElement('div');
     w.className = 'lock';
-    w.innerHTML = `<form class="lock-card" autocomplete="off">
+    w.innerHTML = `<form class="lock-card">
       <span class="lock-ic">${ic('settings', 22)}</span>
       <h2>Verion Life dashboard</h2>
-      <p class="sub">Enter your dashboard key. You only need to do this once on each device.</p>
-      <input type="password" placeholder="Dashboard key" aria-label="Dashboard key" required>
+      <p class="sub">Sign in to see your leads. This device stays signed in until you sign out.</p>
+      <label class="sr" for="lkUser">Username</label>
+      <input id="lkUser" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Username" required>
+      <label class="sr" for="lkPass">Password</label>
+      <input id="lkPass" name="password" type="password" autocomplete="current-password" placeholder="Password" required>
       <p class="lock-err" role="alert">${esc(msg)}</p>
-      <button class="btn">Open dashboard</button>
+      <button class="btn">Sign in</button>
     </form>`;
     document.body.append(w);
-    const f = $('form', w), inp = $('input', w), err = $('.lock-err', w), btn = $('button', w);
+    const f = $('form', w), user = $('#lkUser', w), pass = $('#lkPass', w), err = $('.lock-err', w), btn = $('button', w);
     anim(w, [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
     anim(f, [{ opacity: 0, transform: 'translateY(18px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 560, easing: SPRING, delay: 60 });
-    setTimeout(() => inp.focus(), 80);
+    setTimeout(() => user.focus(), 80);
+    const shake = () => anim(f, [{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'none' }], { duration: 380, easing: 'ease-out' });
     f.addEventListener('submit', async e => {
       e.preventDefault();
-      apiKey = inp.value.trim(); if (!apiKey) return;
-      btn.disabled = true; btn.textContent = 'Checking…'; err.textContent = '';
+      if (!user.value.trim() || !pass.value) return;
+      btn.disabled = true; btn.textContent = 'Signing in…'; err.textContent = '';
       try {
+        const res = await signIn(user.value.trim(), pass.value);
+        if (!res.ok) { const x = new Error(res.error); x.login = res.error; throw x; }
+        apiKey = res.key;
         const rows = await fetchLeads();
         try { localStorage.setItem(KEYK, apiKey); } catch { }
         anim(w, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' }).finished.then(() => w.remove());
@@ -925,9 +939,10 @@
         clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) poll(); }, 20000);
       } catch (x) {
         apiKey = '';
-        err.textContent = x.auth ? 'That key didn’t work. Check it and try again.' : 'Can’t reach your Google Sheet. Check your connection.';
-        anim(f, [{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'none' }], { duration: 380, easing: 'ease-out' });
-        btn.disabled = false; btn.textContent = 'Open dashboard'; inp.select();
+        err.textContent = LOGIN_ERR[x.login] || 'Can’t reach your Google Sheet. Check your connection.';
+        shake();
+        btn.disabled = false; btn.textContent = 'Sign in';
+        if (x.login === 'bad') { pass.value = ''; pass.focus(); }
       }
     });
   }
