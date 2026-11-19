@@ -250,13 +250,16 @@ function alertNewLead_(p) {
   }
 }
 
+const CALL_WINDOW = { morning: 'Morning (9am–12pm)', afternoon: 'Afternoon (12–5pm)', evening: 'Evening (5–8pm)' };
+
 function alertMessage_(p) {
   const name = String(p.full_name || p.first_name || 'New lead').trim();
   const pr = Math.round(+p.priority);
   const prio = pr >= 1 && pr <= 10 ? pr : 0;
   const heat = prio >= 8 ? 'Hot lead' : prio >= 5 ? 'Interested' : prio ? 'Just looking' : '';
-  const callShort = shortCall_(p.call_local);
-  const subject = 'New lead: ' + name + (prio ? ' · ' + prio + '/10' : '') + (callShort ? ' · call ' + callShort : '');
+  const win = CALL_WINDOW[p.call_window] || '';
+  const callShort = win ? win.split(' ')[0].toLowerCase() : shortCall_(p.call_local);
+  const subject = 'New lead: ' + name + (prio ? ' · ' + prio + '/10' : '') + (p.state ? ' · ' + p.state : '') + (callShort ? ' · call ' + callShort : '');
 
   const phone = String(p.phone || ''), tel = phone.replace(/[^\d+]/g, ''), email = String(p.email || '');
   const page = String(p.page || '');
@@ -265,7 +268,8 @@ function alertMessage_(p) {
   const ads = ['utm_source', 'utm_medium', 'utm_campaign'].map(function (k) { return p[k]; }).filter(Boolean).join(' / ') || (p.gclid ? 'Google Ads' : p.fbclid ? 'Facebook / Instagram ad' : '');
 
   const rows = [
-    ['Wants a call', p.call_local ? p.call_local + (p.call_timezone ? ' (' + p.call_timezone + ')' : '') : ''],
+    win ? ['Best time to call', win] : ['Wants a call', p.call_local ? p.call_local + (p.call_timezone ? ' (' + p.call_timezone + ')' : '') : ''],
+    ['State', p.state || ''],
     ['Interested in', INTEREST[p.protecting || p.interest] || p.protecting || ''],
     ['Age range', p.age_range || ''],
     ['Can save', SAVINGS[p.coverage_amount || p.savings_monthly] || p.coverage_amount || ''],
@@ -327,11 +331,10 @@ function setAlertEmails() {
 function sendTestAlert() {
   const ui = SpreadsheetApp.getUi(), to = alertEmails_();
   if (!to) return ui.alert('Alerts are off. Use "Set alert emails" first.');
-  const inTwoHours = new Date(Date.now() + 2 * 3600 * 1000);
   const m = alertMessage_({
     full_name: 'Test Lead (sample)', phone: '(555) 010-0000', email: 'test@example.com', priority: '9', protecting: 'all-3',
     age_range: '35-49', coverage_amount: '200-300', page: 'https://verionlife.netlify.app/',
-    call_local: Utilities.formatDate(inTwoHours, Session.getScriptTimeZone(), 'EEEE, d MMM, h:mm a'), call_timezone: Session.getScriptTimeZone(),
+    call_window: 'afternoon', state: 'TX',
   });
   MailApp.sendEmail({ to: to, subject: '[TEST] ' + m.subject, htmlBody: m.html, body: m.text, name: 'Verion Life leads' });
   ui.alert('Test alert sent to ' + to + '. Check your inbox (and spam, the first time).');
