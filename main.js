@@ -64,6 +64,7 @@
   const CFG = Object.assign({ LEAD_WEBHOOK_URL: '', BOOKING_URL: '', LEAD_SOURCE: 'Verion Life website' }, window.VERION_CONFIG || {});
   const fine = document.getElementById('fine');
   let sending = false;
+  let leadId = '';   // one id per submission, so a retry never creates a duplicate row
 
   function buildLead() {
     const d = Object.fromEntries(new FormData(form));
@@ -96,8 +97,17 @@
     const lead = buildLead();
     sending = true; next.disabled = true; nextLabel.textContent = 'Enviando…'; next.classList.add('loading');
     try {
-      if (CFG.LEAD_WEBHOOK_URL) await post(CFG.LEAD_WEBHOOK_URL, lead);
-      else console.warn('[Verion Life] No LEAD_WEBHOOK_URL set in config.js. Lead not sent:', lead);
+      leadId = leadId || 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      lead.id = leadId;
+      // dashboard database (Google Sheet) and/or an outside CRM webhook
+      const sends = [CFG.DASHBOARD_API_URL, CFG.LEAD_WEBHOOK_URL].filter(Boolean).map(u => post(u, lead));
+      if (!sends.length) console.warn('[Verion Life] No DASHBOARD_API_URL or LEAD_WEBHOOK_URL set in config.js. Lead not sent:', lead);
+      await Promise.all(sends);
+      if (CFG.CRM_DEMO && !CFG.DASHBOARD_API_URL) try { // demo dashboard (crm.html) picks this up live, same browser only
+        const k = 'verion_live_leads', all = JSON.parse(localStorage.getItem(k) || '[]');
+        all.push(lead);
+        localStorage.setItem(k, JSON.stringify(all.slice(-25)));
+      } catch (e) { /* storage blocked: nothing to do */ }
       i = TOTAL; render(); setupBooking(lead);
     } catch (err) {
       console.error(err);
@@ -132,4 +142,11 @@
   }
   back.addEventListener('click', () => { if (i > 0) { i--; render(); } });
   render();
+
+  // Instagram: real link once INSTAGRAM_URL is set in config.js; until then it's inert
+  const ig = document.getElementById('igBtn');
+  if (ig) {
+    if (window.VERION_CONFIG && window.VERION_CONFIG.INSTAGRAM_URL) ig.href = window.VERION_CONFIG.INSTAGRAM_URL;
+    else ig.addEventListener('click', e => e.preventDefault());
+  }
 })();
