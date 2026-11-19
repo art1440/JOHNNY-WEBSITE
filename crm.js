@@ -69,8 +69,9 @@
   const COVER_MID = { '<100k': 50000, '100-250k': 175000, '250-500k': 375000, '500k+': 600000 };
   const RATE = { '18-34': .55, '35-49': 1, '50-64': 2.6, '65+': 6.5 };   // rough $/yr per $1k of term coverage
   const SRC = {
-    website: ['Website form', 'globe'], missed: ['Missed call', 'missed'], instagram: ['Instagram', 'instagram'],
-    facebook: ['Facebook ad', 'facebook'], google: ['Google', 'search'], referral: ['Referral', 'link'],
+    // [full label, icon, short label for the leads table]
+    website: ['Website form', 'globe', 'Website'], missed: ['Missed call', 'missed', 'Call'], instagram: ['Instagram', 'instagram', 'Instagram'],
+    facebook: ['Facebook ad', 'facebook', 'Facebook'], google: ['Google', 'search', 'Google'], referral: ['Referral', 'link', 'Referral'],
   };
   const STAGES = ['new', 'contacted', 'booked', 'lost'];
   const STAGE_LABEL = { new: 'New', contacted: 'Contacted', booked: 'Booked', lost: 'Lost' };
@@ -84,6 +85,10 @@
   const money = n => '$' + Math.round(n).toLocaleString('en-US');
   const initials = l => ((l.first || '?')[0] + ((l.last || '')[0] || '')).toUpperCase();
   const shortName = l => l.first + (l.last ? ' ' + l.last[0] + '.' : '');
+  // IUL form: 1–10, how important a more secure financial future is to them. Hot ≥ 8, warm 5–7, cool ≤ 4.
+  const prio = l => { const n = Math.round(+l.priority); return n >= 1 && n <= 10 ? n : 0; };
+  const heat = n => n >= 8 ? 'hot' : n >= 5 ? 'warm' : 'cool';
+  const HEAT_LABEL = { hot: 'Hot lead', warm: 'Interested', cool: 'Just looking' };
 
   /* ---------- Time ---------- */
   const MIN = 6e4, HOUR = 36e5, DAY = 864e5;
@@ -103,25 +108,33 @@
     const day = dd === 0 ? 'Today' : dd === -1 ? 'Tomorrow' : new Date(ms).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     return day + ', ' + tfmt(ms);
   }
+  // table column: just enough to scan; the full date is in the tooltip
+  function whenShort(ms) {
+    const dd = dayDiff(ms);
+    if (dd === 0) return tfmt(ms);
+    if (dd === 1) return 'Yesterday';
+    if (dd > 1 && dd < 7) return new Date(ms).toLocaleDateString('en-US', { weekday: 'long' });
+    return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
   const ago = ms => { const m = Math.max(1, Math.round((Date.now() - ms) / MIN)); return m < 60 ? m + ' min' : m < 1440 ? Math.round(m / 60) + ' h' : Math.round(m / 1440) + ' d'; };
   const at = (daysFromToday, h, m = 0) => { const d = new Date(); d.setDate(d.getDate() + daysFromToday); d.setHours(h, m, 0, 0); return d.getTime(); };
 
   /* ---------- Sample data (times are relative to "now" so the demo always looks current) ---------- */
   function seed() {
     const now = Date.now();
-    const L = (id, first, last, phone, protect, age, coverage, tobacco, source, status, createdAgo, extra = {}) =>
-      Object.assign({ id, first, last, phone, email: `${first}.${last[0]}@example.com`.toLowerCase(), protect, age, coverage, tobacco, source, status, created: now - createdAgo, note: '' }, extra);
+    const L = (id, first, last, phone, protect, age, coverage, priority, source, status, createdAgo, extra = {}) =>
+      Object.assign({ id, first, last, phone, email: `${first}.${last[0]}@example.com`.toLowerCase(), protect, age, coverage, priority, source, status, created: now - createdAgo, note: '' }, extra);
     return [
-      L('s1', 'María', 'González', '(312) 555-0142', 'family', '35-49', '250-500k', 'no', 'website', 'new', 38 * MIN, { note: 'Two kids, 4 and 7. Wants coverage before baby #3.' }),
-      L('s2', 'José', 'Ramírez', '(312) 555-0187', 'mortgage', '35-49', '100-250k', 'no', 'missed', 'new', 2.2 * HOUR, { note: 'Called on lunch break. Ask about a 20-year term to match the mortgage.' }),
-      L('s3', 'Javier', 'Herrera', '(773) 555-0119', 'family', '35-49', '250-500k', 'yes', 'instagram', 'new', 5.5 * HOUR),
-      L('s4', 'Carmen', 'Díaz', '(708) 555-0163', 'final-expenses', '65+', '<100k', 'no', 'facebook', 'contacted', 21 * HOUR, { note: 'Prefers calls after 3 PM. Daughter helps with paperwork.' }),
-      L('s5', 'Luis', 'Morales', '(312) 555-0104', 'spouse', '18-34', '250-500k', 'no', 'instagram', 'contacted', 27 * HOUR),
-      L('s6', 'Ana', 'López', '(773) 555-0178', 'family', '35-49', '500k+', 'no', 'referral', 'booked', 31 * HOUR, { appt: at(1, 11), note: 'Referred by Carmen D. Self-employed; ask about income replacement.' }),
-      L('s7', 'Roberto', 'Sánchez', '(630) 555-0151', 'mortgage', '50-64', '250-500k', 'yes', 'google', 'booked', 50 * HOUR, { appt: at(2, 15, 30) }),
-      L('s8', 'Daniela', 'Pérez', '(312) 555-0126', 'family', '18-34', '100-250k', 'no', 'website', 'booked', 3.2 * DAY, { appt: at(0, 16) }),
-      L('s9', 'Sofía', 'Torres', '(708) 555-0192', 'spouse', '50-64', '100-250k', 'no', 'website', 'contacted', 4.1 * DAY),
-      L('s10', 'Miguel', 'Ángel', '(773) 555-0135', 'final-expenses', '65+', '<100k', 'yes', 'missed', 'lost', 9 * DAY, { note: 'Went with his bank\'s policy.' }),
+      L('s1', 'María', 'González', '(312) 555-0142', 'all-3', '35-49', '200-300', 9, 'website', 'new', 38 * MIN, { note: 'Two kids, 4 and 7. Wants something that protects them and builds savings.' }),
+      L('s2', 'José', 'Ramírez', '(312) 555-0187', 'grow-savings', '35-49', '300-400', 7, 'missed', 'new', 2.2 * HOUR, { note: 'Called on lunch break. Has a 401k, asked how IUL compares.' }),
+      L('s3', 'Javier', 'Herrera', '(773) 555-0119', 'life-insurance', '18-34', '100-200', 4, 'instagram', 'new', 5.5 * HOUR),
+      L('s4', 'Carmen', 'Díaz', '(708) 555-0163', 'living-benefits', '50-64', '200-300', 8, 'facebook', 'contacted', 21 * HOUR, { note: 'Prefers calls after 3 PM. Daughter helps with paperwork.' }),
+      L('s5', 'Luis', 'Morales', '(312) 555-0104', 'grow-savings', '18-34', '100-200', 6, 'instagram', 'contacted', 27 * HOUR),
+      L('s6', 'Ana', 'López', '(773) 555-0178', 'all-3', '35-49', '500+', 10, 'referral', 'booked', 31 * HOUR, { appt: at(1, 11), note: 'Referred by Carmen D. Self-employed; ask about tax-free retirement income.' }),
+      L('s7', 'Roberto', 'Sánchez', '(630) 555-0151', 'living-benefits', '50-64', '300-400', 8, 'google', 'booked', 50 * HOUR, { appt: at(2, 15, 30) }),
+      L('s8', 'Daniela', 'Pérez', '(312) 555-0126', 'life-insurance', '18-34', '100-200', 7, 'website', 'booked', 3.2 * DAY, { appt: at(0, 16) }),
+      L('s9', 'Sofía', 'Torres', '(708) 555-0192', 'grow-savings', '35-49', '200-300', 5, 'website', 'contacted', 4.1 * DAY),
+      L('s10', 'Miguel', 'Ángel', '(773) 555-0135', 'life-insurance', '65+', '100-200', 3, 'missed', 'lost', 9 * DAY, { note: 'Went with his bank\'s policy.' }),
     ];
   }
   const ORIGIN = {
@@ -138,11 +151,12 @@
   const THREADS = {
     s4: [['out', 'Hola Carmen, le escribe su agente de Verion Life. Recibí su solicitud para gastos finales. ¿Tiene 10 minutos hoy para una llamada?', 20.8 * HOUR], ['in', 'Sí, después de las 3. Gracias', 20 * HOUR]],
     s5: [['out', 'Hola Luis, soy su agente de Verion Life. Vi su solicitud de cotización. ¿Cuándo le queda bien una llamada rápida?', 26.7 * HOUR], ['in', '¿Puede ser mañana en la mañana? Trabajo hasta las 6', 1.4 * HOUR, 'unread']],
-    s9: [['out', 'Hola Sofía, gracias por su solicitud. Tengo algunas opciones para usted y su esposo. ¿Le llamo hoy?', 4 * DAY], ['in', '¿Cuánto sería más o menos por $150 mil?', 50 * MIN, 'unread']],
+    s9: [['out', 'Hola Sofía, gracias por su solicitud. Tengo algunas opciones para hacer crecer su ahorro. ¿Le llamo hoy?', 4 * DAY], ['in', '¿Cuánto tendría ahorrado en 20 años con $250 al mes?', 50 * MIN, 'unread']],
     s6: [['out', 'Hola Ana, Carmen me dio su número. Con gusto le ayudo con su cotización.', 30 * HOUR], ['in', 'Perfecto, nos vemos mañana a las 11', 28 * HOUR]],
     s7: [['out', 'Hola Roberto, le confirmo nuestra llamada. Le envío la invitación.', 47 * HOUR], ['in', 'Ok gracias', 46 * HOUR]],
   };
-  const textTemplate = l => `Hola ${l.first}, le escribe su agente de Verion Life. Recibí su solicitud de cotización para ${({ family: 'proteger a su familia', spouse: 'proteger a su pareja', 'final-expenses': 'gastos finales', mortgage: 'cubrir su hipoteca' })[l.protect] || 'seguro de vida'}. ¿Tiene 10 minutos hoy para una llamada?`;
+  const textTemplate = l => `Hola ${l.first}, le escribe su agente de Verion Life. Recibí su solicitud de cotización para ${({ family: 'proteger a su familia', spouse: 'proteger a su pareja', 'final-expenses': 'gastos finales', mortgage: 'cubrir su hipoteca',
+    'life-insurance': 'seguro de vida', 'grow-savings': 'ahorrar y hacer crecer su dinero', 'living-benefits': 'beneficios en vida', 'all-3': 'seguro de vida, ahorro y beneficios en vida' })[l.protect] || 'seguro de vida'}. ¿Tiene 10 minutos hoy para una llamada?`;
 
   /* ---------- Persistence (this browser only) ---------- */
   const KEY = 'verion_crm_v1', LIVE = 'verion_live_leads';
@@ -271,10 +285,14 @@
 
   const rowHTML = l => `
     <span class="av">${esc(initials(l))}</span>
-    <div class="who"><b>${esc(shortName(l))}</b><small>${esc(PROTECT[l.protect] || '')} · ${esc(COVER[l.coverage] || '')}</small></div>
-    <span class="src"><span class="chip">${ic(SRC[l.source][1], 15)}${SRC[l.source][0]}</span></span>
-    <span class="st"><span class="pill ${l.status}">${STAGE_LABEL[l.status]}</span></span>
-    <div class="val"><b>${money(l.premium)}</b><small>${when(l.created)}</small></div>`;
+    <div class="who"><b><span class="nm">${esc(shortName(l))}</span></b><small>${esc(PROTECT[l.protect] || '')} · ${esc(COVER[l.coverage] || '')}</small></div>
+    <span class="src"><span class="chip" title="${SRC[l.source][0]}">${ic(SRC[l.source][1], 15)}<span>${SRC[l.source][2]}</span></span></span>
+    <span class="st"><span class="pill ${l.status}">${STAGE_LABEL[l.status]}</span>${prioHTML(l)}</span>
+    <div class="val"><b>${money(l.premium)}</b><small title="${when(l.created)}">${whenShort(l.created)}</small></div>`;
+  // tiny 1–10 meter under the stage tag; the fill grows in when the row enters
+  const prioHTML = l => { const n = prio(l); return n ? `<span class="pr ${heat(n)}" title="Priority ${n}/10 · ${HEAT_LABEL[heat(n)]}"><span class="pr-bar"><i style="transform:scaleX(${n / 10})"></i></span>${n}</span>` : ''; };
+  const growPrio = (root, delay = 0) => $$('.pr-bar i', root).forEach((i, k) =>
+    anim(i, [{ transform: 'scaleX(0)' }, { transform: i.style.transform }], { duration: 700, delay: delay + k * 35 }));
   function makeRow(l) {
     const r = document.createElement('div');
     r.className = 'row' + (l.live ? ' live' : ''); r.dataset.id = l.id;
@@ -313,7 +331,9 @@
       rowsEl.append(r);
       if (isNew) {
         if (l.id === fresh) { r.classList.add('fresh'); r.addEventListener('animationend', () => r.classList.remove('fresh'), { once: true }); }
-        anim(r, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: (stagger || l.id === fresh ? entering++ * 35 : 0) + (old.size ? 90 : 0) });
+        const d = (stagger || l.id === fresh ? entering++ * 35 : 0) + (old.size ? 90 : 0);
+        anim(r, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: d });
+        growPrio(r, d + 160);
       }
     });
     if (!items.length) rowsEl.insertAdjacentHTML('beforeend', `<div class="empty">${query ? 'No leads match “' + esc(query) + '”.' : (LIVE_MODE && !leads.length ? 'No leads yet. Fill out the form on the website to test it.' : 'Nothing here yet.')}</div>`);
@@ -346,10 +366,17 @@
   function detailHTML(l) {
     const facts = [
       ...(SAVE_MID[l.coverage]
-        ? [['Interest', PROTECT[l.protect]], ['Age range', l.age], ['Monthly savings', COVER[l.coverage]], ['Priority', l.priority ? l.priority + ' / 10' : '—']]
+        ? [['Interested in', PROTECT[l.protect]], ['Age range', l.age], ['Can save', COVER[l.coverage]]]
         : [['Protecting', PROTECT[l.protect]], ['Age range', l.age], ['Coverage', COVER[l.coverage]]]),
-      ['Tobacco (12 mo)', l.tobacco === 'yes' ? 'Yes' : l.tobacco === 'no' ? 'No' : 'Ask on call'], ['Source', SRC[l.source][0]], ['Est. premium', money(l.premium) + ' / yr'],
+      ...(l.tobacco ? [['Tobacco (12 mo)', l.tobacco === 'yes' ? 'Yes' : l.tobacco === 'no' ? 'No' : 'Ask on call']] : []), // older term-life leads only
+      ['Source', SRC[l.source][0]], ['Est. premium', money(l.premium) + ' / yr'],
     ];
+    const n = prio(l), h = heat(n);
+    const meter = n ? `<div class="pm ${h}" data-d>
+        <div class="pm-top"><p class="lbl">Priority</p><span class="pm-tag">${HEAT_LABEL[h]}</span><b class="pm-n"><span data-to="${n}">${n}</span><small>/10</small></b></div>
+        <div class="pm-bar" role="img" aria-label="Priority ${n} out of 10">${Array.from({ length: 10 }, (_, k) => `<i class="${k < n ? 'f' : ''}"></i>`).join('')}</div>
+        <p class="pm-q">How important a more secure financial future is to them</p>
+      </div>` : '';
     if (l.appt && l.status === 'booked') facts.splice(0, 0, ['Call', apptLabel(l.appt)]);
     else if (l.requested) facts.splice(0, 0, ['Wants a call', apptLabel(l.requested)]);
     return `<div class="d-in">
@@ -374,6 +401,7 @@
       <div data-d><p class="lbl">Stage</p>
         <div class="seg stage" data-s="${l.status}"><span class="ind"></span>${STAGES.map(s => `<button type="button" data-stage="${s}" class="${s === l.status ? 'on' : ''}">${STAGE_LABEL[s]}</button>`).join('')}</div>
       </div>
+      ${meter}
       <dl class="facts" data-d>${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
       <div class="note" data-d><label for="dNote">Note</label><textarea id="dNote" rows="1" placeholder="Add a note for yourself…">${esc(l.note)}</textarea></div>
       <div class="acts" data-d><h3>Activity</h3><ol>${l.act.map(actHTML).join('')}</ol></div>
@@ -397,6 +425,12 @@
       autosize($('#dNote'));
       requestAnimationFrame(() => slide($('.stage .ind', detailEl), $('.stage .on', detailEl), true));
       if (animate) rise($$('[data-d]', detailEl), 0, 35);
+      const pm = $('.pm', detailEl);
+      if (pm && animate && !reduce) { // segments fill left to right while the number counts up with them
+        $$('.pm-bar i.f', pm).forEach((i, k) => anim(i, [{ transform: 'scaleY(.35)', opacity: .15 }, { transform: 'none', opacity: 1 }], { duration: 520, delay: 260 + k * 45, easing: SPRING }));
+        const num = $('[data-to]', pm), to = +num.dataset.to; num.dataset.v = 0; num.textContent = '0';
+        setTimeout(() => tween(num, to, String, 200 + to * 45), 260);
+      }
     };
     const cur = $('.d-in', detailEl);
     if (cur && animate && !reduce) anim(cur, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(-4px)' }], { duration: 110, fill: 'forwards' }).finished.then(build);
@@ -747,9 +781,9 @@
      LIVE: new leads arrive (simulated, or from the website form in another tab)
      ===================================================================== */
   const SIM_POOL = [
-    ['Valeria', 'Castro', 'family', '18-34', '250-500k', 'no', 'website'], ['Alejandro', 'Ruiz', 'mortgage', '35-49', '250-500k', 'no', 'google'],
-    ['Gabriela', 'Flores', 'spouse', '35-49', '100-250k', 'no', 'instagram'], ['Ricardo', 'Mendoza', 'final-expenses', '65+', '<100k', 'no', 'facebook'],
-    ['Lucía', 'Vargas', 'family', '35-49', '500k+', 'no', 'website'], ['Fernando', 'Ortiz', 'mortgage', '50-64', '100-250k', 'yes', 'missed'],
+    ['Valeria', 'Castro', 'all-3', '18-34', '200-300', 9, 'website'], ['Alejandro', 'Ruiz', 'grow-savings', '35-49', '300-400', 7, 'google'],
+    ['Gabriela', 'Flores', 'living-benefits', '35-49', '100-200', 6, 'instagram'], ['Ricardo', 'Mendoza', 'life-insurance', '50-64', '200-300', 8, 'facebook'],
+    ['Lucía', 'Vargas', 'all-3', '35-49', '500+', 10, 'website'], ['Fernando', 'Ortiz', 'grow-savings', '50-64', '100-200', 4, 'missed'],
   ];
   function arrive(l) {
     if (!l.act) { l.premium = premium(l); l.act = [...(S.act[l.id] || []), ...baseActivity(l)]; }
@@ -765,7 +799,7 @@
     const used = new Set(leads.map(l => l.first));
     const p = SIM_POOL.find(x => !used.has(x[0])) || SIM_POOL[Math.floor(Math.random() * SIM_POOL.length)];
     const l = { id: 'x' + Date.now(), first: p[0], last: p[1], phone: `(312) 555-01${String(Math.floor(Math.random() * 90) + 10)}`, email: `${p[0].toLowerCase()}@example.com`,
-      protect: p[2], age: p[3], coverage: p[4], tobacco: p[5], source: p[6], status: 'new', created: Date.now(), note: '' };
+      protect: p[2], age: p[3], coverage: p[4], priority: p[5], source: p[6], status: 'new', created: Date.now(), note: '' };
     S.sims.unshift(Object.assign({}, l)); S.sims = S.sims.slice(0, 20); save();
     arrive(l);
   }
