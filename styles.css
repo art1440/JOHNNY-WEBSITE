@@ -137,6 +137,32 @@ fieldset{border:0;min-width:0}
 .step h2{font-weight:500;font-size:clamp(1.3rem,1.8vw,1.55rem);line-height:1.22;letter-spacing:-.03em;margin-bottom:1.1rem}
 .opts{display:grid;gap:.55rem}
 .opts.two{grid-template-columns:1fr 1fr}
+/* ---------- 1–10 importance meter ---------- */
+.meter{--p:44.44%;--heat:.44;margin-top:auto;margin-bottom:.4rem;padding:1rem 1.1rem .9rem;border-radius:20px;background:rgba(255,255,255,.5);box-shadow:inset 0 0 0 1px rgba(255,255,255,.95),0 8px 22px -14px rgba(60,207,106,.45)}
+.meter-read{display:flex;align-items:baseline;gap:.7rem;margin-bottom:.6rem}
+.meter-n{font-weight:600;font-size:2.6rem;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;min-width:1.4em;color:var(--ink-3);transition:color .3s}
+.meter.touched .meter-n{color:color-mix(in srgb,var(--deeper) calc(var(--heat)*100%),var(--deep))}
+.meter-n.pop{animation:mpop .38s var(--spring)}
+@keyframes mpop{0%{transform:translateY(6px) scale(.86);opacity:.4}100%{transform:none;opacity:1}}
+.meter-w{font-family:var(--mono);font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.meter:not(.touched) .meter-w{animation:hint 1.8s ease-in-out infinite}
+@keyframes hint{50%{opacity:.4}}
+.meter input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:none;cursor:pointer;margin:0;touch-action:pan-y}
+.meter input[type=range]::-webkit-slider-runnable-track{height:10px;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--deep) var(--p),rgba(10,42,20,.08) var(--p))}
+.meter input[type=range]::-moz-range-track{height:10px;border-radius:999px;background:linear-gradient(90deg,var(--cyan),var(--deep) var(--p),rgba(10,42,20,.08) var(--p))}
+.meter input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;margin-top:-9px;border-radius:50%;background:#fff;
+  box-shadow:0 0 0 2px var(--deep),0 6px 14px -4px rgba(10,42,20,.35),inset 0 -3px 6px rgba(152,255,152,.5);transition:transform .35s var(--spring),box-shadow .3s}
+.meter input[type=range]::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--deep),0 6px 14px -4px rgba(10,42,20,.35)}
+.meter:not(.touched) input[type=range]::-webkit-slider-thumb{animation:nudgeThumb 2.2s var(--ease) infinite}
+@keyframes nudgeThumb{0%,60%,100%{transform:none}30%{transform:translateX(10px)}}
+.meter input[type=range]:active::-webkit-slider-thumb{transform:scale(1.18);box-shadow:0 0 0 2px var(--deep),0 0 0 9px rgba(152,255,152,.35),0 8px 18px -4px rgba(10,42,20,.35)}
+.meter input[type=range]:focus-visible{outline:none}
+.meter input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--deeper),0 0 0 6px rgba(30,138,66,.35)}
+.meter-ticks{display:flex;justify-content:space-between;padding:0 13px;margin-top:2px}
+.meter-ticks i{width:2px;height:6px;border-radius:2px;background:rgba(10,42,20,.14);transition:background-color .25s,transform .35s var(--spring)}
+.meter-ticks i.on{background:var(--deep)}
+.meter.touched .meter-ticks i.on{transform:scaleY(1.35)}
+.meter-ends{display:flex;justify-content:space-between;margin-top:.35rem;font-family:var(--mono);font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
 /* answers are glass droplets */
 .opt{position:relative;display:flex;align-items:center;gap:.75rem;padding:.8rem 1rem;border-radius:16px;cursor:pointer;font-size:.94rem;font-weight:400;
   background:rgba(255,255,255,.42);box-shadow:inset 0 1px 0 rgba(255,255,255,.95),inset 0 0 0 1px rgba(255,255,255,.7),0 4px 12px -8px rgba(60,207,106,.4);
