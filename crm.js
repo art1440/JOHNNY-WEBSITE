@@ -154,6 +154,7 @@
     return {
       id: String(w.id || 'w' + Date.parse(w.submitted_at)), first, last: rest.join(' ') || w.last_name || '', phone: String(w.phone || ''), email: String(w.email || ''),
       protect: w.protecting, age: w.age_range, coverage: w.coverage_amount, tobacco: w.tobacco, source: 'website', status: 'new',
+      requested: Date.parse(w.call_at) || undefined, // call time the client picked on the form
       created: Date.parse(w.submitted_at) || Date.now(), note: '', live: true,
     };
   };
@@ -343,9 +344,10 @@
   function detailHTML(l) {
     const facts = [
       ['Protecting', PROTECT[l.protect]], ['Age range', l.age], ['Coverage', COVER[l.coverage]],
-      ['Tobacco (12 mo)', l.tobacco === 'yes' ? 'Yes' : 'No'], ['Source', SRC[l.source][0]], ['Est. premium', money(l.premium) + ' / yr'],
+      ['Tobacco (12 mo)', l.tobacco === 'yes' ? 'Yes' : l.tobacco === 'no' ? 'No' : 'Ask on call'], ['Source', SRC[l.source][0]], ['Est. premium', money(l.premium) + ' / yr'],
     ];
     if (l.appt && l.status === 'booked') facts.splice(0, 0, ['Call', apptLabel(l.appt)]);
+    else if (l.requested) facts.splice(0, 0, ['Wants a call', apptLabel(l.requested)]);
     return `<div class="d-in">
       <div class="d-head" data-d>
         <span class="av">${esc(initials(l))}</span>
@@ -468,7 +470,7 @@
     if (!l || l.status === st) return;
     l.status = st; S.status[l.id] = st;
     if (st === 'booked') {
-      if (!l.appt) { l.appt = nextSlot(); S.appt[l.id] = l.appt; }
+      if (!l.appt) { l.appt = l.requested > Date.now() ? l.requested : nextSlot(); S.appt[l.id] = l.appt; } // honour the time they picked
       addAct(l, { t: 'booked', text: 'Call booked · ' + apptLabel(l.appt), at: Date.now() });
       toast('Call booked', apptLabel(l.appt) + ' · added to Calendar', 'booked');
     } else {
