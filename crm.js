@@ -9,6 +9,13 @@
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const CFG = window.VERION_CONFIG || {};
+  /* Live mode: with DASHBOARD_API_URL set (Google Sheet web app), real leads replace the sample data */
+  const API = String(CFG.DASHBOARD_API_URL || '').trim();
+  const LIVE_MODE = !!API;
+  const KEYK = 'verion_dash_key';
+  let apiKey = ''; try { apiKey = localStorage.getItem(KEYK) || ''; } catch { }
+  let server = [];
+  if (LIVE_MODE) document.documentElement.classList.add('connected');
   const EASE = 'cubic-bezier(.16,1,.3,1)', SPRING = 'cubic-bezier(.34,1.3,.64,1)';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -142,13 +149,27 @@
   const fromWebsite = w => {
     const [first, ...rest] = (w.full_name || w.first_name || 'Website lead').trim().split(/\s+/);
     return {
-      id: w.id || 'w' + Date.parse(w.submitted_at), first, last: rest.join(' ') || w.last_name || '', phone: w.phone || '', email: w.email || '',
+      id: String(w.id || 'w' + Date.parse(w.submitted_at)), first, last: rest.join(' ') || w.last_name || '', phone: String(w.phone || ''), email: String(w.email || ''),
       protect: w.protecting, age: w.age_range, coverage: w.coverage_amount, tobacco: w.tobacco, source: 'website', status: 'new',
       created: Date.parse(w.submitted_at) || Date.now(), note: '', live: true,
     };
   };
+  // a row from the Google Sheet: stage, note, call time and activity log are stored there
+  const fromServer = r => {
+    const l = fromWebsite(r);
+    l.live = false; l.real = true;
+    l.status = STAGES.includes(r.status) ? r.status : 'new';
+    l.note = String(r.note || '');
+    if (+r.appt) l.appt = +r.appt;
+    try { l.log = JSON.parse(r.activity || '[]'); } catch { l.log = []; }
+    if (!Array.isArray(l.log)) l.log = [];
+    l.premium = premium(l);
+    l.act = [...l.log, { t: 'origin', text: ORIGIN.website, at: l.created }];
+    return l;
+  };
   let leads = [];
   function build() {
+    if (LIVE_MODE) { leads = server.map(fromServer).sort((a, b) => b.created - a.created); return; }
     const live = (load(LIVE) || []).map(fromWebsite);
     leads = [...live, ...S.sims, ...seed()].map(l => {
       if (S.status[l.id]) l.status = S.status[l.id];
@@ -200,7 +221,7 @@
   }
 
   /* ---------- Badges + header numbers ---------- */
-  function unreadThreads() { return Object.entries(THREADS).filter(([id, m]) => m.some(x => x[3] === 'unread') && !S.read.includes(id)).length; }
+  function unreadThreads() { return Object.entries(THREADS).filter(([id, m]) => byId(id) && m.some(x => x[3] === 'unread') && !S.read.includes(id)).length; }
   function badges(animate) {
     const b1 = $('#bLeads'), b2 = $('#bInbox'), n1 = counts().new, n2 = unreadThreads();
     if (animate && +b1.dataset.n !== n1 && n1) requestAnimationFrame(() => bump(b1));
@@ -289,7 +310,7 @@
         anim(r, [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: (stagger || l.id === fresh ? entering++ * 35 : 0) + (old.size ? 90 : 0) });
       }
     });
-    if (!items.length) rowsEl.insertAdjacentHTML('beforeend', `<div class="empty">${query ? 'No leads match “' + esc(query) + '”.' : 'Nothing here yet.'}</div>`);
+    if (!items.length) rowsEl.insertAdjacentHTML('beforeend', `<div class="empty">${query ? 'No leads match “' + esc(query) + '”.' : (LIVE_MODE && !leads.length ? 'No leads yet. Fill out the form on the website to test it.' : 'Nothing here yet.')}</div>`);
     if (!reduce) $$('.row:not(.ghost)', rowsEl).forEach(r => {
       const o = old.get(r.dataset.id); if (!o) return;
       const n = r.getBoundingClientRect(), dy = o.top - n.top;
@@ -308,7 +329,7 @@
 
   function leadHeader() {
     const c = counts(), o = open();
-    $('#leadSub').textContent = `${c.all} recent leads · ${o.filter(l => l.status !== 'booked').length} open, worth ${money(o.reduce((s, l) => s + l.premium, 0))}/yr`;
+    $('#leadSub').textContent = `${c.all} recent lead${c.all === 1 ? '' : 's'} · ${o.filter(l => l.status !== 'booked').length} open, worth ${money(o.reduce((s, l) => s + l.premium, 0))}/yr`;
     $$('button', filtersEl).forEach(b => tween($('b', b), c[b.dataset.f], String, 500));
     $$('button', filtersEl).forEach(b => { b.classList.toggle('on', b.dataset.f === filter); b.setAttribute('aria-selected', b.dataset.f === filter); });
     slide($('.ind', filtersEl), $(`[data-f="${filter}"]`, filtersEl));
@@ -424,7 +445,8 @@
     if (on) { const t = $('textarea', c); t.focus({ preventScroll: true }); t.setSelectionRange(t.value.length, t.value.length); }
   }
   function addAct(l, a) {
-    (S.act[l.id] ||= []).unshift(a); l.act.unshift(a); save();
+    if (l.real) { (l.log ||= []).unshift(a); l.act.unshift(a); sync(l); }
+    else { (S.act[l.id] ||= []).unshift(a); l.act.unshift(a); save(); }
     if (selected === l.id) {
       const ol = $('.acts ol', detailEl); if (!ol) return;
       ol.insertAdjacentHTML('afterbegin', actHTML(a));
@@ -450,7 +472,7 @@
       if (l.appt) { delete l.appt; S.appt[l.id] = null; }
       addAct(l, st === 'lost' ? { t: 'lost', text: 'Marked as lost', at: Date.now() } : { t: 'stage', text: 'Moved to ' + STAGE_LABEL[st], at: Date.now() });
     }
-    save();
+    save(); if (l.real) sync(l);
     // choreography: pill morphs in the row + header, then the list reflows if the filter no longer matches
     const row = $(`.row[data-id="${CSS.escape(l.id)}"]:not(.ghost)`, rowsEl);
     setStatusPill(row, l);
@@ -490,7 +512,7 @@
   detailEl.addEventListener('input', e => { if (e.target.id === 'dNote') autosize(e.target); });
   detailEl.addEventListener('change', e => {
     if (e.target.id !== 'dNote') return;
-    const l = byId(selected); l.note = e.target.value; S.notes[l.id] = l.note; save();
+    const l = byId(selected); l.note = e.target.value; S.notes[l.id] = l.note; save(); if (l.real) sync(l);
     toast('Note saved', shortName(l), 'note');
   });
 
@@ -518,7 +540,7 @@
     const max = Math.max(...srcCounts.map(x => x[1]));
     const funnel = [['Leads', c.all], ['Contacted', c.contacted + c.booked], ['Booked', c.booked]];
     el.innerHTML = `
-      <div class="vhead"><div data-rise><h1>Overview <span class="tag">Sample data</span></h1><p class="sub">How the website is turning visitors into calls.</p></div></div>
+      <div class="vhead"><div data-rise><h1>Overview <span class="tag sample">Sample data</span></h1><p class="sub">How the website is turning visitors into calls.</p></div></div>
       <div class="kpis">
         <div class="card kpi" data-rise><p class="k">${ic('leads', 16)}Leads</p><p class="v" data-n="${c.all}">0</p><p class="d"><b>+${leads.filter(l => Date.now() - l.created < 7 * DAY).length}</b> this week</p></div>
         <div class="card kpi" data-rise><p class="k">${ic('booked', 16)}Calls booked</p><p class="v" data-n="${c.booked}">0</p><p class="d">${Math.round(c.booked / Math.max(1, c.all) * 100)}% of leads</p></div>
@@ -680,7 +702,8 @@
       <div class="vhead"><div data-rise><h1>Settings</h1><p class="sub">Connections live in <code>config.js</code> on the website.</p></div></div>
       <div class="set-grid">
         <div class="card" data-rise><div class="card-h"><h2>Connections</h2></div>
-          ${conn('form', 'Website quote form', CFG.LEAD_WEBHOOK_URL, 'Sending leads to your CRM webhook', 'Not connected: set LEAD_WEBHOOK_URL')}
+          ${conn('form', 'Lead database (Google Sheet)', LIVE_MODE, 'Connected: website leads show up here', 'Not connected: set DASHBOARD_API_URL')}
+          ${conn('link', 'Outside CRM webhook', CFG.LEAD_WEBHOOK_URL, 'Also sending leads to your CRM', 'Optional: set LEAD_WEBHOOK_URL')}
           ${conn('calendar', 'Booking calendar', CFG.BOOKING_URL, 'Leads can book a call after the form', 'Not connected: set BOOKING_URL')}
           ${conn('instagram', 'Instagram', CFG.INSTAGRAM_URL, 'Linked from the website', 'Not linked: set INSTAGRAM_URL')}
         </div>
@@ -689,16 +712,21 @@
           ${sw('autoreply', 'Auto-reply within 60 seconds', 'Sends a friendly hello in Spanish while you’re busy')}
           ${sw('digest', 'Morning summary email', 'Yesterday’s leads and today’s calls at 8 AM')}
         </div>
-        <div class="card" data-rise><div class="card-h"><h2>Demo</h2></div>
-          <p class="hint" style="margin:0 0 16px">Sample leads, plus anything you change here, are stored in this browser only.</p>
+        ${LIVE_MODE ? `<div class="card" data-rise><div class="card-h"><h2>Lead database</h2><small class="ok-t">Google Sheet</small></div>
+          <p class="hint" style="margin:0 0 16px">Every quote sent from the website lands in your Google Sheet and shows up here within 20 seconds. Stage, notes and call times you change here are saved back to the sheet.</p>
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn sm" id="syncBtn">Refresh now</button><button type="button" class="btn ghost sm" id="signOut">Sign out on this device</button></div>
+        </div>` : `<div class="card" data-rise><div class="card-h"><h2>Demo</h2></div>
+          <p class="hint" style="margin:0 0 16px">Sample leads, plus anything you change here, are stored in this browser only. Set <code>DASHBOARD_API_URL</code> in <code>config.js</code> to show real leads from the website.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn sm" id="simBtn">${ic('bolt', 16)}Simulate a new lead</button><button type="button" class="btn ghost sm" id="resetBtn">Reset demo data</button></div>
-        </div>
+        </div>`}
       </div>`;
   }
   $('[data-view="settings"]').addEventListener('click', e => {
     const s = e.target.closest('[data-pref]');
     if (s) { const k = s.dataset.pref; S.prefs[k] = !S.prefs[k]; s.setAttribute('aria-checked', S.prefs[k]); save(); return; }
     if (e.target.closest('#simBtn')) return simulate();
+    if (e.target.closest('#syncBtn')) return poll(true);
+    if (e.target.closest('#signOut')) { signOut(); return; }
     if (e.target.closest('#resetBtn')) {
       S = blank(); save(); try { localStorage.removeItem(LIVE); } catch { }
       build(); selected = null; filter = 'all'; $$('.row', rowsEl).forEach(r => r.remove()); badges();
@@ -715,7 +743,7 @@
     ['Lucía', 'Vargas', 'family', '35-49', '500k+', 'no', 'website'], ['Fernando', 'Ortiz', 'mortgage', '50-64', '100-250k', 'yes', 'missed'],
   ];
   function arrive(l) {
-    l.premium = premium(l); l.act = [...(S.act[l.id] || []), ...baseActivity(l)];
+    if (!l.act) { l.premium = premium(l); l.act = [...(S.act[l.id] || []), ...baseActivity(l)]; }
     leads.unshift(l);
     badges(true);
     toast(`New lead · ${shortName(l)}`, `${SRC[l.source][0]} · ${COVER[l.coverage]}`, 'bolt');
@@ -732,12 +760,134 @@
     S.sims.unshift(Object.assign({}, l)); S.sims = S.sims.slice(0, 20); save();
     arrive(l);
   }
-  $('#simulate').addEventListener('click', simulate);
+  $('#simulate').addEventListener('click', () => LIVE_MODE ? poll(true) : simulate());
   addEventListener('storage', e => {
-    if (e.key !== LIVE) return;
+    if (e.key !== LIVE || LIVE_MODE) return;
     const known = new Set(leads.map(l => l.id));
     (load(LIVE) || []).map(fromWebsite).filter(l => !known.has(l.id)).forEach(arrive);
   });
+
+  /* =====================================================================
+     LIVE MODE: Google Sheet as the database (see apps-script/Code.gs)
+     ===================================================================== */
+  const pending = new Set();
+  const syncT = {};
+  let pollT = 0, polling = false;
+  const apiURL = params => { const u = new URL(API); Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v)); return u.href; };
+  async function fetchLeads() {
+    const r = await fetch(apiURL({ action: 'list', key: apiKey, t: Date.now() }));
+    const j = await r.json();
+    if (!j.ok) { const e = new Error(j.error || 'error'); e.auth = j.error === 'unauthorized'; throw e; }
+    return Array.isArray(j.leads) ? j.leads : [];
+  }
+  function setSync(state, title) {
+    const b = $('#simulate'); if (!b) return;
+    b.classList.toggle('load', state === 'load'); b.classList.toggle('err', state === 'err');
+    const s = $('span', b); if (s && state !== 'load') s.textContent = state === 'err' ? 'Offline' : 'Live';
+    if (title) b.title = title;
+  }
+  // save stage / note / call time / activity back to the sheet (debounced per lead)
+  function sync(l) {
+    pending.add(l.id); clearTimeout(syncT[l.id]);
+    syncT[l.id] = setTimeout(() => {
+      const body = new URLSearchParams({ action: 'update', key: apiKey, id: l.id, status: l.status, note: l.note || '', appt: l.appt || '', activity: JSON.stringify((l.log || []).slice(0, 60)) });
+      fetch(API, { method: 'POST', mode: 'no-cors', body })
+        .catch(() => toast('Couldn’t save to your sheet', 'Check your connection and try again', 'lost'))
+        .finally(() => setTimeout(() => pending.delete(l.id), 4000));
+    }, 350);
+  }
+  function rerenderAll() {
+    $$('.row', rowsEl).forEach(r => r.remove());
+    if (!byId(selected)) selected = null;
+    badges(); RENDER[view]({});
+    rise($$('[data-rise]', $(`.view[data-view="${view}"]`)).filter(x => !(x === detailEl && sheet.matches)));
+  }
+  async function poll(manual) {
+    if (!apiKey || polling) return;
+    polling = true; setSync('load');
+    try {
+      const rows = await fetchLeads();
+      const known = new Map(leads.map(l => [l.id, l]));
+      let changed = false, arrived = 0;
+      rows.map(fromServer).forEach(f => {
+        const k = known.get(f.id);
+        if (!k) { arrive(f); arrived++; return; }
+        if (pending.has(k.id)) return;                       // our own save hasn't landed yet
+        if (f.status !== k.status) {
+          k.status = f.status; if (f.appt) k.appt = f.appt; else delete k.appt;
+          setStatusPill($(`.row[data-id="${CSS.escape(k.id)}"]:not(.ghost)`, rowsEl), k); changed = true;
+        }
+        if (f.note !== k.note) { k.note = f.note; changed = true; }
+        if (f.log.length !== (k.log || []).length) { k.log = f.log; k.act = f.act; changed = true; }
+      });
+      server = rows;
+      if (changed) {
+        leadHeader(); badges();
+        if (view === 'leads' && selected && !detailEl.contains(document.activeElement)) showDetail(byId(selected), { animate: false });
+      }
+      setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
+      if (manual && !arrived) toast('Up to date', 'Synced with your Google Sheet', 'check');
+    } catch (e) {
+      if (e.auth) { forgetKey(); lockScreen('That key no longer works. Enter the current one.'); }
+      else { setSync('err', 'Can’t reach your Google Sheet right now'); if (manual) toast('Can’t reach your sheet', 'Check your connection', 'lost'); }
+    } finally { polling = false; }
+  }
+  function forgetKey() { apiKey = ''; try { localStorage.removeItem(KEYK); } catch { } clearInterval(pollT); }
+  function signOut() {
+    forgetKey(); server = []; build(); rerenderAll();
+    lockScreen('Signed out on this device.');
+  }
+  async function connect() {
+    const b = $('#simulate'); b.innerHTML = '<i></i><span>Live</span>'; b.title = 'Connecting to your Google Sheet…';
+    if (!apiKey) return lockScreen();
+    setSync('load');
+    try {
+      server = await fetchLeads(); build(); rerenderAll();
+      setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
+      clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) poll(); }, 20000);
+    } catch (e) {
+      if (e.auth) { forgetKey(); lockScreen('That key didn’t work.'); }
+      else { setSync('err', 'Can’t reach your Google Sheet'); toast('Can’t reach your Google Sheet', 'Check DASHBOARD_API_URL in config.js', 'lost'); }
+    }
+  }
+  document.addEventListener('visibilitychange', () => { if (LIVE_MODE && apiKey && !document.hidden) poll(); });
+
+  function lockScreen(msg = '') {
+    if ($('.lock')) return;
+    const w = document.createElement('div');
+    w.className = 'lock';
+    w.innerHTML = `<form class="lock-card" autocomplete="off">
+      <span class="lock-ic">${ic('settings', 22)}</span>
+      <h2>Verion Life dashboard</h2>
+      <p class="sub">Enter your dashboard key. You only need to do this once on each device.</p>
+      <input type="password" placeholder="Dashboard key" aria-label="Dashboard key" required>
+      <p class="lock-err" role="alert">${esc(msg)}</p>
+      <button class="btn">Open dashboard</button>
+    </form>`;
+    document.body.append(w);
+    const f = $('form', w), inp = $('input', w), err = $('.lock-err', w), btn = $('button', w);
+    anim(w, [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
+    anim(f, [{ opacity: 0, transform: 'translateY(18px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 560, easing: SPRING, delay: 60 });
+    setTimeout(() => inp.focus(), 80);
+    f.addEventListener('submit', async e => {
+      e.preventDefault();
+      apiKey = inp.value.trim(); if (!apiKey) return;
+      btn.disabled = true; btn.textContent = 'Checking…'; err.textContent = '';
+      try {
+        const rows = await fetchLeads();
+        try { localStorage.setItem(KEYK, apiKey); } catch { }
+        anim(w, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' }).finished.then(() => w.remove());
+        server = rows; build(); rerenderAll();
+        setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
+        clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) poll(); }, 20000);
+      } catch (x) {
+        apiKey = '';
+        err.textContent = x.auth ? 'That key didn’t work. Check it and try again.' : 'Can’t reach your Google Sheet. Check your connection.';
+        anim(f, [{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'none' }], { duration: 380, easing: 'ease-out' });
+        btn.disabled = false; btn.textContent = 'Open dashboard'; inp.select();
+      }
+    });
+  }
 
   /* ---------- Boot ---------- */
   const RENDER = { overview: renderOverview, leads: renderLeads, calendar: renderCalendar, inbox: renderInbox, reviews: renderReviews, settings: renderSettings };
@@ -745,6 +895,7 @@
   build(); badges();
   const start = (location.hash || '').slice(1);
   go(RENDER[start] ? start : 'leads');
+  if (LIVE_MODE) connect();
   let rT; addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => {
     slide(sideInd, $('#side .on'), true); leadHeader(); placeSel(true);
     const sg = $('.stage', detailEl); if (sg) slide($('.ind', sg), $('.on', sg), true);

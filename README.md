@@ -29,14 +29,29 @@ Build in the CRM: pipeline stages, new-lead email/SMS alert, follow-up reminders
 
 ## Client dashboard (`crm.html`)
 
-A demo CRM in the SermaWebDesign dashboard style: Overview, Leads (filters, search, detail pane,
-stage changes, "Send text", "Mark booked"), Calendar, Inbox, Reviews, Settings.
-It is front end only, with sample data. Changes are stored in the viewer's browser, nothing is sent.
+Overview, Leads (filters, search, stage, notes, "Mark booked"), Calendar, Inbox, Reviews, Settings.
+Linked from the site footer ("Panel del agente"), hidden from search engines.
 
-- **Live demo:** click *Live demo* (top right) to simulate a lead arriving. With `CRM_DEMO: true` in
-  `config.js`, a quote submitted on the website in the same browser also appears in the dashboard live.
-  Set it to `false` once the real CRM webhook is connected.
-- Linked from the site footer ("Panel del agente") and hidden from search engines (`noindex`), but it has no login: anyone can open it. Don't put real client data in it.
+**Two modes**
+- **Demo** (`DASHBOARD_API_URL` empty): sample leads, *Live demo* button simulates a new lead. Nothing is saved anywhere but the viewer's browser.
+- **Live** (`DASHBOARD_API_URL` set): every quote sent from the website is saved to a Google Sheet and appears on the
+  dashboard within 20 seconds (click the green *Live* pill to refresh right away). Stage, notes and call times are saved back
+  to the sheet, so any device sees the same thing. The dashboard asks for a key once per device.
+  Texts and review requests are still demo only: nothing is actually sent.
+
+### Leads on the dashboard: one-time Google Sheet setup (about 5 minutes)
+
+1. Create a new Google Sheet (name it e.g. *Verion Life leads*).
+2. In the sheet: **Extensions → Apps Script**. Delete what's there, paste all of `apps-script/Code.gs`, click **Save**.
+3. In the function menu at the top pick **setup**, click **Run**, and allow access when Google asks.
+   Open **Execution log**: it prints `Your dashboard key: …`. Save that key somewhere safe.
+4. **Deploy → New deployment →** gear icon **→ Web app**. *Execute as:* **Me**. *Who has access:* **Anyone**. Click **Deploy** and copy the **Web app URL** (ends in `/exec`).
+   ("Anyone" is needed so website visitors can submit the form. Reading leads always needs the key.)
+5. Paste that URL into `DASHBOARD_API_URL` in `config.js`, commit and push.
+6. Open `crm.html`, enter the key. Done: submit a test quote on the website and watch it arrive.
+
+If you change `Code.gs` later, use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
+Keep the `id` column in the sheet; you can add, hide or reorder other columns freely.
 
 ## Photos
 See `images/README.md`. Drop files with the listed names and they appear automatically.

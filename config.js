@@ -10,6 +10,11 @@ window.VERION_CONFIG = {
      Leave empty to test: leads are only printed to the browser console. */
   LEAD_WEBHOOK_URL: "",
 
+  /* Your lead database: the Google Sheet web app URL (ends in /exec).
+     Setup: README.md → "Leads on the dashboard". When set, every quote from
+     the website is saved to the sheet and shows up on the dashboard (crm.html). */
+  DASHBOARD_API_URL: "",
+
   /* Your CRM's booking calendar link (GoHighLevel calendar, Calendly, etc.).
      When set, people can book a call right after submitting the form. */
   BOOKING_URL: "",
