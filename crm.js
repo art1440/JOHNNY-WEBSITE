@@ -748,7 +748,6 @@
           ${conn('form', 'Lead database (Google Sheet)', LIVE_MODE, 'Connected: website leads show up here', 'Not connected: set DASHBOARD_API_URL')}
           ${conn('link', 'Outside CRM webhook', CFG.LEAD_WEBHOOK_URL, 'Also sending leads to your CRM', 'Optional: set LEAD_WEBHOOK_URL')}
           ${conn('calendar', 'Booking calendar', CFG.BOOKING_URL, 'Leads can book a call after the form', 'Not connected: set BOOKING_URL')}
-          ${conn('instagram', 'Instagram', CFG.INSTAGRAM_URL, 'Linked from the website', 'Not linked: set INSTAGRAM_URL')}
         </div>
         <div class="card" data-rise><div class="card-h"><h2>Notifications</h2><small>Preview</small></div>
           ${sw('alert', 'Text me on every new lead', 'Instant SMS with name, phone and coverage')}
