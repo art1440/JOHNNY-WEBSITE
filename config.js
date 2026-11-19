@@ -18,6 +18,12 @@ window.VERION_CONFIG = {
      Leave empty and the button stays on the page but goes nowhere. */
   INSTAGRAM_URL: "",
 
+  /* Demo dashboard (crm.html): also keep a copy of each form submission in
+     the visitor's own browser so it pops up live in the dashboard opened in
+     the same browser. Handy for showing the system off; set to false once
+     the real CRM webhook is connected. */
+  CRM_DEMO: true,
+
   /* Tag added to every lead so you can filter/automate on it in the CRM. */
   LEAD_SOURCE: "Verion Life website",
 };

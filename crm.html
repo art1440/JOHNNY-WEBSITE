@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Verion Life · Dashboard</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="crm.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="title">Verion Life <span>· Client Dashboard</span></div>
+    <div class="top-r">
+      <span class="range">Last 30 days</span>
+      <span class="tag">Sample data</span>
+      <button type="button" class="tag live" id="simulate" title="Simulate a new lead arriving from the website"><i></i>Live demo</button>
+    </div>
+  </header>
+
+  <div class="body">
+    <nav class="side" id="side" aria-label="Sections">
+      <span class="ind" aria-hidden="true"></span>
+      <button type="button" data-go="overview"><span data-i="overview"></span><span class="lb">Overview</span></button>
+      <button type="button" data-go="leads"><span data-i="leads"></span><span class="lb">Leads</span><b class="badge" id="bLeads"></b></button>
+      <button type="button" data-go="calendar"><span data-i="calendar"></span><span class="lb">Calendar</span></button>
+      <button type="button" data-go="inbox"><span data-i="inbox"></span><span class="lb">Inbox</span><b class="badge" id="bInbox"></b></button>
+      <button type="button" data-go="reviews"><span data-i="reviews"></span><span class="lb">Reviews</span></button>
+      <button type="button" data-go="settings"><span data-i="settings"></span><span class="lb">Settings</span></button>
+    </nav>
+
+    <main class="main">
+      <!-- OVERVIEW -->
+      <section class="view" data-view="overview" aria-label="Overview"></section>
+
+      <!-- LEADS -->
+      <section class="view" data-view="leads" aria-label="Leads">
+        <div class="vhead">
+          <div data-rise>
+            <h1>Leads <span class="tag">Sample data</span></h1>
+            <p class="sub" id="leadSub"></p>
+          </div>
+          <div class="vhead-r" data-rise>
+            <label class="search"><span data-i="search"></span><input id="q" type="search" placeholder="Search leads" autocomplete="off"></label>
+            <div class="seg filters" id="filters" role="tablist" aria-label="Filter by status">
+              <span class="ind" aria-hidden="true"></span>
+              <button type="button" data-f="all">All <b></b></button>
+              <button type="button" data-f="new">New <b></b></button>
+              <button type="button" data-f="contacted">Contacted <b></b></button>
+              <button type="button" data-f="booked">Booked <b></b></button>
+              <button type="button" data-f="lost">Lost <b></b></button>
+            </div>
+          </div>
+        </div>
+        <div class="split">
+          <div class="panel list" data-rise>
+            <div class="thead"><span></span><span>Lead</span><span>Source</span><span>Status</span><span>Est. premium · received</span></div>
+            <div class="rows" id="rows"><span class="sel" aria-hidden="true"></span></div>
+          </div>
+          <aside class="panel detail" id="detail" data-rise aria-label="Lead details"></aside>
+        </div>
+      </section>
+
+      <section class="view" data-view="calendar" aria-label="Calendar"></section>
+      <section class="view" data-view="inbox" aria-label="Inbox"></section>
+      <section class="view" data-view="reviews" aria-label="Reviews"></section>
+      <section class="view" data-view="settings" aria-label="Settings"></section>
+    </main>
+  </div>
+</div>
+<div class="scrim" id="scrim"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<script src="config.js"></script>
+<script src="crm.js"></script>
+</body>
+</html>

@@ -98,6 +98,11 @@
     try {
       if (CFG.LEAD_WEBHOOK_URL) await post(CFG.LEAD_WEBHOOK_URL, lead);
       else console.warn('[Verion Life] No LEAD_WEBHOOK_URL set in config.js. Lead not sent:', lead);
+      if (CFG.CRM_DEMO) try { // demo dashboard (crm.html) picks this up live, same browser only
+        const k = 'verion_live_leads', all = JSON.parse(localStorage.getItem(k) || '[]');
+        all.push(Object.assign({ id: 'w' + Date.now() }, lead));
+        localStorage.setItem(k, JSON.stringify(all.slice(-25)));
+      } catch (e) { /* storage blocked: nothing to do */ }
       i = TOTAL; render(); setupBooking(lead);
     } catch (err) {
       console.error(err);
