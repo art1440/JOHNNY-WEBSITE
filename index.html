@@ -92,12 +92,19 @@
           </div>
         </fieldset>
 
-        <!-- 4 -->
-        <fieldset class="step" data-step="4">
-          <h2>¿Ha usado tabaco o nicotina en los últimos 12 meses?</h2>
-          <div class="opts two stagger">
-            <label class="opt"><input type="radio" name="tobacco" value="no"><span class="dot"></span>No</label>
-            <label class="opt"><input type="radio" name="tobacco" value="yes"><span class="dot"></span>Sí</label>
+        <!-- 4: live call scheduler (built + ticked every second by main.js) -->
+        <fieldset class="step when" data-step="4" data-noauto>
+          <legend class="sr">Elija un día y una hora para su llamada</legend>
+          <div class="when-head">
+            <h2>¿Cuándo le llamo?</h2>
+            <span class="now" title="Hora actual"><i></i><b id="nowClock">--:--:--</b></span>
+          </div>
+          <div class="days" id="days" role="radiogroup" aria-label="Día"><span class="pill" aria-hidden="true"></span></div>
+          <div class="times" id="times" role="radiogroup" aria-label="Hora"></div>
+          <div class="eta" id="eta">
+            <span class="eta-k" id="etaK">Elija una hora</span>
+            <span class="roll" id="roll" aria-hidden="true"></span>
+            <span class="eta-when" id="etaWhen"></span>
           </div>
         </fieldset>
 
