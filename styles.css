@@ -57,7 +57,7 @@ a{color:inherit}
   -webkit-mask:radial-gradient(120% 100% at 30% 0%,#000 30%,transparent 70%);mask:radial-gradient(120% 100% at 30% 0%,#000 30%,transparent 70%)}
 .lg > *{position:relative;z-index:3}
 
-/* ---------- Background: water light, tech grid, floating glass orbs ---------- */
+/* ---------- Background: water light, tech grid ---------- */
 .bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:radial-gradient(140% 90% at 80% 0%,#ffffff 0%,var(--bg-0) 40%,var(--bg-1) 100%)}
 .bg .defs{position:absolute}
 .aurora{position:absolute;border-radius:50%;will-change:transform}
@@ -73,15 +73,6 @@ a{color:inherit}
   background-image:linear-gradient(rgba(60,207,106,.09) 1px,transparent 1px),linear-gradient(90deg,rgba(60,207,106,.09) 1px,transparent 1px);
   background-size:64px 64px;background-position:-1px -1px;
   -webkit-mask:radial-gradient(90% 70% at 50% 30%,#000 25%,transparent 80%);mask:radial-gradient(90% 70% at 50% 30%,#000 25%,transparent 80%)}
-/* glass spheres: real things for the panels to bend */
-.orb{position:absolute;border-radius:50%;will-change:transform;
-  background:radial-gradient(circle at 32% 26%,#fff 0 6%,rgba(255,255,255,.55) 12%,rgba(205,255,205,.35) 38%,rgba(152,255,152,.55) 70%,rgba(60,207,106,.75) 100%);
-  box-shadow:inset -14px -18px 34px rgba(60,207,106,.45),inset 10px 12px 22px rgba(255,255,255,.7),0 30px 60px -20px rgba(60,207,106,.5)}
-.orb.o1{width:clamp(200px,24vw,360px);aspect-ratio:1;right:8vw;top:16vh;animation:bob1 14s ease-in-out infinite alternate}
-.orb.o2{width:clamp(90px,9vw,140px);aspect-ratio:1;left:44vw;top:12vh;animation:bob2 11s ease-in-out infinite alternate}
-.orb.o3{width:clamp(130px,14vw,210px);aspect-ratio:1;left:-40px;bottom:10vh;animation:bob1 17s ease-in-out infinite alternate-reverse}
-@keyframes bob1{to{transform:translate(-24px,30px)}}
-@keyframes bob2{to{transform:translate(20px,-26px)}}
 
 /* ---------- Layout ---------- */
 .wrap{position:relative;z-index:1;overflow-x:clip}
@@ -197,6 +188,28 @@ fieldset{border:0;min-width:0}
 /* ---------- Instagram: a small glass chip that hangs under the form ---------- */
 .hero-side{display:flex;flex-direction:column;align-items:flex-end;gap:14px;justify-self:end;width:100%;max-width:470px}
 .hero-side .card{justify-self:auto}
+.hero-side{position:relative}
+.hero-side > *:not(.shield){position:relative;z-index:1}
+.hero-side .card.lg{position:relative}
+
+/* ---------- Rotating headline word ---------- */
+.rot{display:inline-block;position:relative;vertical-align:top;height:1.1em;overflow:hidden;white-space:nowrap;transition:width .65s var(--ease)}
+.rot-w{position:absolute;left:0;top:0;line-height:1.02;transform:translateY(105%);opacity:0;filter:blur(6px);transition:transform .7s var(--ease),opacity .45s var(--ease),filter .55s var(--ease)}
+.rot-w.is-on{transform:none;opacity:1;filter:none}
+.rot-w.is-off{transform:translateY(-105%);opacity:0;filter:blur(6px)}
+
+/* ---------- Brand shield: draws on, then a light travels the rim ---------- */
+.shield{position:absolute;z-index:0;left:50%;top:51%;width:118%;aspect-ratio:360/385;translate:-50% -50%;overflow:visible;pointer-events:none}
+.shield path{fill:none;stroke-linejoin:round}
+.shield .sh-fill{fill:url(#shFill);opacity:0;animation:shFade 1.4s 1.5s var(--ease) forwards}
+.shield .sh-line{stroke:var(--deep);stroke-width:1;stroke-dasharray:1;stroke-dashoffset:1;animation:shDraw 1.8s .35s cubic-bezier(.65,0,.35,1) forwards}
+.shield .sh-inner{stroke:var(--deep);stroke-width:.8;stroke-opacity:.45;stroke-dasharray:.003 .009;opacity:0;animation:shFade 1.2s 1.6s var(--ease) forwards}
+.shield .sh-glint{stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-dasharray:.07 .93;stroke-dashoffset:1;opacity:0;
+  filter:drop-shadow(0 0 6px var(--cyan)) drop-shadow(0 0 2px var(--deep));
+  animation:shFade .6s 2.1s forwards,shRun 7s 2.1s linear infinite}
+@keyframes shDraw{to{stroke-dashoffset:0}}
+@keyframes shFade{to{opacity:1}}
+@keyframes shRun{to{stroke-dashoffset:0}}
 .ig{position:relative;display:inline-flex;align-items:center;gap:.7rem;padding:.5rem 1.05rem .5rem .5rem;border-radius:999px;
   font-size:.86rem;font-weight:500;color:var(--ink);text-decoration:none;
   background:rgba(255,255,255,.38);-webkit-backdrop-filter:blur(12px) saturate(170%);backdrop-filter:blur(12px) saturate(170%);
@@ -311,6 +324,7 @@ fieldset{border:0;min-width:0}
 }
 
 /* ---------- Responsive ---------- */
+@media (max-width:1100px){.shield{display:none}}
 @media (max-width:960px){
   .site-footer .container{justify-content:center;text-align:center}
 }
@@ -330,10 +344,10 @@ fieldset{border:0;min-width:0}
   .card .progress::before,.card .progress::after{display:none}
   h1{font-size:clamp(2.1rem,10vw,2.8rem)}
   .hero .lede,.hero .trust,.hero .eyebrow{display:none}
+  .shield{display:none}
   .steps{height:272px}
   .step h2{font-size:1.2rem;margin-bottom:.85rem}
   .fine{display:none}
-  .orb.o1{width:58vw;right:-18vw;top:6vh}.orb.o2{left:auto;right:30vw;top:auto;bottom:20vh}
 }
 @media (max-height:700px) and (max-width:860px){
   .hero h1{font-size:1.8rem}
@@ -346,14 +360,6 @@ fieldset{border:0;min-width:0}
   .progress{margin-bottom:.9rem}
 }
 /* ---------- Performance ---------- */
-/* glass spheres drift up with scroll on the compositor where supported (JS fallback otherwise) */
-@supports (animation-timeline:scroll()){
-  .bg .orb{animation-name:var(--bob),rise-scroll;animation-duration:var(--bob-dur),1ms;animation-timing-function:ease-in-out,linear;
-       animation-iteration-count:infinite,1;animation-direction:alternate,normal;animation-fill-mode:none,both;animation-timeline:auto,scroll(root)}
-  .bg .orb.o2{--bob:bob2;--bob-dur:11s;--rise:-2400px}
-  .bg .orb.o3{--bob:bob1;--bob-dur:17s;--rise:-900px}
-  @keyframes rise-scroll{to{translate:0 var(--rise)}}
-}
 /* phones: lighter blur radius (cost grows with radius) */
 @media (max-width:860px){
   .lg{-webkit-backdrop-filter:blur(10px) saturate(160%);backdrop-filter:blur(10px) saturate(160%)}
@@ -361,5 +367,7 @@ fieldset{border:0;min-width:0}
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;transition-delay:0s!important}
-  .aurora,.orb,.caustics{animation:none!important}
+  .aurora,.caustics{animation:none!important}
+  .shield path{animation:none!important;stroke-dashoffset:0!important;opacity:1!important}
+  .shield .sh-glint{display:none}
 }

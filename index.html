@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Verion Life | Seguro de Vida</title>
-<meta name="description" content="Proteja el legado de su familia. Responda cinco preguntas rápidas para obtener una cotización de seguro de vida gratuita y sin compromiso de un agente con licencia.">
+<meta name="description" content="Proteja el legado de su familia. Responda cinco preguntas rápidas para obtener una cotización de seguro de vida gratuita y sin compromiso de una agencia con licencia.">
 <script>document.documentElement.className="js"+(/Chrome\//.test(navigator.userAgent)?" refract":"")</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,6 @@
   <div class="aurora a"></div><div class="aurora b"></div><div class="aurora c"></div>
   <div class="caustics"></div>
   <div class="grid"></div>
-  <div class="orb o2"></div><div class="orb o3"></div>
 </div>
 <div class="wrap">
 <header class="site-header">
@@ -40,13 +39,14 @@
 <section class="hero">
   <div class="container hero-grid">
     <div>
-      <p class="eyebrow fade" style="animation-delay:.1s">Agente de seguros de vida con licencia</p>
+      <p class="eyebrow fade" style="animation-delay:.1s">Agencia de seguros de vida con licencia</p>
       <h1>
-        <span class="line"><span>Proteja a las</span></span>
-        <span class="line"><span>personas que</span></span>
-        <span class="line"><span><em>cuentan con usted.</em></span></span>
+        <span class="sr">Seguro de vida que protege a su familia.</span>
+        <span class="line" aria-hidden="true"><span>Seguro de vida</span></span>
+        <span class="line" aria-hidden="true"><span>que protege</span></span>
+        <span class="line" aria-hidden="true"><span>a <em class="rot"><span class="rot-w is-on">su familia.</span><span class="rot-w">sus hijos.</span><span class="rot-w">su hogar.</span><span class="rot-w">su futuro.</span><span class="rot-w">su legado.</span></em></span></span>
       </h1>
-      <p class="lede fade" style="animation-delay:.5s">Responda cinco preguntas rápidas y yo personalmente compararé las aseguradoras mejor calificadas para encontrar la cobertura adecuada al menor precio. Sin presión, sin compromiso.</p>
+      <p class="lede fade" style="animation-delay:.5s">En Verion Life comparamos más de 20 aseguradoras mejor calificadas para encontrar la cobertura adecuada al menor precio. Cinco preguntas, sin presión, sin compromiso.</p>
       <div class="trust fade" style="animation-delay:.7s">
         <div><b>60s</b> para calificar</div>
         <div><b>20+</b> aseguradoras comparadas</div>
@@ -55,6 +55,16 @@
     </div>
 
     <div class="hero-side">
+    <!-- brand shield: draws itself around the form, then a light runs its edge -->
+    <svg class="shield" viewBox="20 10 360 385" aria-hidden="true">
+      <defs>
+        <linearGradient id="shFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#98ff98" stop-opacity=".28"/><stop offset="1" stop-color="#98ff98" stop-opacity="0"/></linearGradient>
+      </defs>
+      <path class="sh-fill" d="M200 20 30 72v118c0 100 70 165 170 195 100-30 170-95 170-195V72L200 20Z" fill="url(#shFill)"/>
+      <path class="sh-inner" pathLength="1" d="M200 52 60 95v95c0 84 58 138 140 164 82-26 140-80 140-164V95L200 52Z"/>
+      <path class="sh-line" pathLength="1" d="M200 20 30 72v118c0 100 70 165 170 195 100-30 170-95 170-195V72L200 20Z"/>
+      <path class="sh-glint" pathLength="1" d="M200 20 30 72v118c0 100 70 165 170 195 100-30 170-95 170-195V72L200 20Z"/>
+    </svg>
     <form class="card lg" id="quote" novalidate>
       <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp">
       <div class="progress"><span id="count">Paso 1 de 5</span><div class="bar"><i id="bar"></i></div></div>
@@ -97,7 +107,7 @@
         <fieldset class="step when" data-step="4" data-noauto>
           <legend class="sr">Elija un día y una hora para su llamada</legend>
           <div class="when-head">
-            <h2>¿Cuándo le llamo?</h2>
+            <h2>¿Cuándo le llamamos?</h2>
             <span class="now" title="Hora actual"><i></i><b id="nowClock">--:--:--</b></span>
           </div>
           <div class="days" id="days" role="radiogroup" aria-label="Día"><span class="pill" aria-hidden="true"></span></div>
@@ -111,7 +121,7 @@
 
         <!-- 5 -->
         <fieldset class="step" data-step="5">
-          <h2>¿A dónde le envío su cotización?</h2>
+          <h2>¿A dónde le enviamos su cotización?</h2>
           <div class="opts stagger">
             <div class="field"><label for="name">Nombre completo</label><input id="name" name="name" autocomplete="name" placeholder="Jane Smith" required></div>
             <div class="field"><label for="phone">Teléfono</label><input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="(555) 123-4567" required></div>
@@ -123,7 +133,7 @@
         <div class="step done" data-step="6">
           <svg class="check" viewBox="0 0 72 72"><circle cx="36" cy="36" r="34"/><path d="M23 37l9 9 17-19"/></svg>
           <h2>¡Todo listo!</h2>
-          <p>Revisaré sus respuestas y me comunicaré con usted dentro de un día hábil con sus mejores opciones.</p>
+          <p>Revisaremos sus respuestas y nos comunicaremos con usted dentro de un día hábil con sus mejores opciones.</p>
           <button type="button" class="btn" id="bookBtn" hidden style="margin-top:1.2rem">Elija una hora para su llamada
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>
         </div>
@@ -139,11 +149,11 @@
       <p class="fine" id="fine" role="status">Su información se mantiene privada y nunca se vende.</p>
     </form>
 
-    <a class="ig" id="igBtn" href="#" target="_blank" rel="noopener" aria-label="Sígame en Instagram">
+    <a class="ig" id="igBtn" href="#" target="_blank" rel="noopener" aria-label="Síganos en Instagram">
       <span class="ig-mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="5.2" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="4.1" stroke="currentColor" stroke-width="1.7"/><circle cx="17.3" cy="6.7" r="1.15" fill="currentColor"/></svg>
       </span>
-      <span class="ig-text">Sígame en Instagram</span>
+      <span class="ig-text">Síganos en Instagram</span>
       <svg class="ig-arrow" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
     </div>
@@ -152,7 +162,7 @@
 
 <footer class="site-footer">
   <div class="container">
-    <span>© 2026 Verion Life. Agente de seguros de vida con licencia.</span>
+    <span>© 2026 Verion Life. Agencia de seguros de vida con licencia.</span>
     <span>Cobertura sujeta a aprobación de suscripción.</span>
     <a class="agent-link" href="crm.html">Panel del agente <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
   </div>
