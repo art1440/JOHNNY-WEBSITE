@@ -13,7 +13,7 @@ window.VERION_CONFIG = {
   /* Your lead database: the Google Sheet web app URL (ends in /exec).
      Setup: README.md → "Leads on the dashboard". When set, every quote from
      the website is saved to the sheet and shows up on the dashboard (crm.html). */
-  DASHBOARD_API_URL: "",
+  DASHBOARD_API_URL: "https://script.google.com/macros/s/AKfycbyehEeDuMpjcVL7YCSNXua9mE4C9OBk-KQPfvR82GMhTdEkJOfl7VnG5Ptkl-oReM7fdQ/exec",
 
   /* Your CRM's booking calendar link (GoHighLevel calendar, Calendly, etc.).
      When set, people can book a call right after submitting the form. */
@@ -27,7 +27,7 @@ window.VERION_CONFIG = {
      the visitor's own browser so it pops up live in the dashboard opened in
      the same browser. Handy for showing the system off; set to false once
      the real CRM webhook is connected. */
-  CRM_DEMO: true,
+  CRM_DEMO: false,
 
   /* Tag added to every lead so you can filter/automate on it in the CRM. */
   LEAD_SOURCE: "Verion Life website",
