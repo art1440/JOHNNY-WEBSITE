@@ -19,10 +19,6 @@ window.VERION_CONFIG = {
      When set, people can book a call right after submitting the form. */
   BOOKING_URL: "",
 
-  /* Your Instagram profile link, e.g. "https://instagram.com/yourhandle".
-     Leave empty and the button stays on the page but goes nowhere. */
-  INSTAGRAM_URL: "",
-
   /* Demo dashboard (crm.html): also keep a copy of each form submission in
      the visitor's own browser so it pops up live in the dashboard opened in
      the same browser. Handy for showing the system off; set to false once
