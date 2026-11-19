@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Client Login | Verion Life</title>
+<meta name="description" content="Sign in to the Verion Life client dashboard to see every quote request, booked call and follow-up in one place.">
+<link rel="canonical" href="https://art1440.github.io/JOHNNY-WEBSITE/login/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Client Login | Verion Life">
+<meta property="og:description" content="Sign in to the Verion Life client dashboard.">
+<meta property="og:url" content="https://art1440.github.io/JOHNNY-WEBSITE/login/">
+<meta name="theme-color" content="#06101f">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Sora:wght@300;400;500;600&display=swap">
+<style>
+:root{
+  --bg:#06101f;--line:rgba(150,185,245,.13);--line-2:rgba(150,185,245,.24);
+  --text:#e8eefa;--muted:#93a6c7;--dim:#6a7ea5;--accent:#4c9bff;--accent-hi:#7db8ff;--green:#3ddc97;--red:#f2796b;--amber:#f5b85a;
+  --f:"Sora",system-ui,sans-serif;--serif:"Fraunces",Georgia,serif;
+  --ease:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.3,.64,1);
+}
+@view-transition{navigation:auto}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{min-height:100vh;min-height:100dvh;font-family:var(--f);color:var(--text);background:var(--bg);-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  display:grid;place-items:center;padding:28px 16px}
+button,input{font:inherit;color:inherit}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
+
+/* slow light behind the card: two blurred pools drifting on the compositor */
+.glow{position:fixed;width:70vmax;height:70vmax;border-radius:50%;filter:blur(90px);opacity:.55;pointer-events:none;z-index:-1}
+.g1{left:-30vmax;top:-35vmax;background:#163a72;animation:drift1 22s ease-in-out infinite alternate}
+.g2{right:-35vmax;bottom:-40vmax;background:#0f3360;animation:drift2 26s ease-in-out infinite alternate}
+@keyframes drift1{to{transform:translate(12vmax,10vmax) scale(1.08)}}
+@keyframes drift2{to{transform:translate(-10vmax,-12vmax) scale(.94)}}
+
+.wrap{width:min(420px,100%);display:grid;gap:22px;justify-items:center}
+.card{width:100%;padding:36px 32px 30px;border-radius:30px;display:grid;gap:16px;
+  background:linear-gradient(180deg,rgba(24,46,86,.72),rgba(12,26,52,.72));border:1px solid var(--line-2);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 40px 90px -40px rgba(0,0,0,.9);
+  animation:card .7s var(--spring) both;transition:transform .45s var(--ease),opacity .35s}
+@keyframes card{from{opacity:0;transform:translateY(22px) scale(.97)}}
+.card.shake{animation:shake .4s ease-out}
+@keyframes shake{20%{transform:translateX(-9px)}45%{transform:translateX(7px)}70%{transform:translateX(-4px)}}
+body.leaving .card{opacity:0;transform:translateY(-8px) scale(1.02)}
+
+.brand{justify-self:start;width:56px;height:56px;border-radius:18px;display:grid;place-items:center;color:var(--accent-hi);
+  background:rgba(76,155,255,.1);border:1px solid var(--line-2);transition:transform .4s var(--spring)}
+.brand:hover{transform:rotate(-6deg) scale(1.05)}
+.shield{width:30px;height:30px;fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+.shield .s1{stroke-width:1.6;stroke-dasharray:80;stroke-dashoffset:80;animation:draw 1s .25s var(--ease) forwards}
+.shield .s2{stroke-width:1.9;stroke-dasharray:16;stroke-dashoffset:16;animation:draw .5s 1s var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+h1{font-family:var(--serif);font-weight:600;font-size:2rem;letter-spacing:-.02em;line-height:1.1;margin-top:4px}
+.sub{color:var(--muted);margin-top:-8px}
+[data-r]{animation:rise .6s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+
+.field{display:grid;gap:7px;font-size:.88rem;color:var(--muted)}
+.field input{height:54px;width:100%;padding:0 18px;border-radius:16px;border:1px solid var(--line-2);background:rgba(0,0,0,.22);font-size:1rem;outline:0;
+  transition:border-color .2s,box-shadow .25s,background-color .2s}
+.field input:focus{border-color:rgba(120,175,255,.7);box-shadow:0 0 0 4px rgba(76,155,255,.15);background:rgba(0,0,0,.28)}
+.field input.bad{border-color:rgba(242,121,107,.7)}
+.pw{position:relative}
+.pw input{padding-right:76px}
+.eye{position:absolute;right:8px;top:8px;height:38px;padding:0 12px;border:0;border-radius:12px;background:none;color:var(--muted);font-size:.84rem;cursor:pointer;transition:color .2s,background-color .2s}
+.eye:hover{color:var(--text);background:rgba(255,255,255,.05)}
+
+/* message: opens by growing its row, so the button below glides down instead of jumping */
+.msg{display:grid;grid-template-rows:0fr;transition:grid-template-rows .35s var(--ease),margin .35s var(--ease);margin:-8px 0}
+.msg.on{grid-template-rows:1fr;margin:0}
+.msg>p{overflow:hidden;font-size:.9rem;line-height:1.45}
+.msg.err>p{color:var(--red)}
+.msg.info>p{color:var(--accent-hi)}
+
+.btn{position:relative;height:56px;border:0;border-radius:999px;cursor:pointer;font-size:1.04rem;font-weight:500;color:#fff;overflow:hidden;
+  background:linear-gradient(180deg,#5aa6ff,#2f74ea);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 14px 32px -12px rgba(60,140,255,.95);
+  transition:transform .35s var(--spring),box-shadow .3s,background .4s}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:scale(.97);transition-duration:.1s}
+.btn>*{position:absolute;inset:0;display:grid;place-items:center;transition:opacity .2s,transform .35s var(--ease)}
+.dots,.ok{opacity:0;transform:translateY(8px)}
+.dots{display:flex;align-items:center;justify-content:center;gap:6px}
+.dots i{width:7px;height:7px;border-radius:50%;background:#fff;animation:bounce 1s ease-in-out infinite}
+.dots i:nth-child(2){animation-delay:.12s}.dots i:nth-child(3){animation-delay:.24s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.5}40%{transform:translateY(-5px);opacity:1}}
+.btn.busy{pointer-events:none}
+.btn.busy .lbl,.btn.done .lbl{opacity:0;transform:translateY(-8px)}
+.btn.busy .dots{opacity:1;transform:none}
+.btn.done{pointer-events:none;background:linear-gradient(180deg,#43d79a,#1fa871);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 14px 32px -12px rgba(61,220,151,.9)}
+.btn.done .ok{opacity:1;transform:none}
+.ok svg{width:24px;height:24px;fill:none;stroke:#fff;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.ok path{stroke-dasharray:24;stroke-dashoffset:24}
+.btn.done .ok path{animation:draw .45s .1s var(--ease) forwards}
+
+.help{font-size:.86rem;color:var(--muted);text-align:center;line-height:1.5}
+.demo{font-size:.84rem;line-height:1.5;color:var(--amber);padding:12px 14px;border-radius:14px;background:rgba(245,184,90,.08);border:1px solid rgba(245,184,90,.25)}
+.about{font-size:.88rem;line-height:1.6;color:var(--dim);text-align:center;max-width:360px}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:.9rem;color:var(--muted);text-decoration:none;transition:color .2s,gap .35s var(--spring)}
+.back:hover{color:var(--text);gap:10px}
+
+@media (max-width:420px){.card{padding:30px 22px 24px;border-radius:26px}h1{font-size:1.75rem}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-delay:0s!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .glow{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="glow g1" aria-hidden="true"></div>
+<div class="glow g2" aria-hidden="true"></div>
+
+<main class="wrap">
+  <form class="card" id="f" novalidate>
+    <a class="brand" href="../index.html" aria-label="Verion Life website">
+      <svg class="shield" viewBox="0 0 32 32" aria-hidden="true"><path class="s1" d="M16 3 5 7v8c0 7 4.7 12 11 14 6.3-2 11-7 11-14V7L16 3Z"/><path class="s2" d="M11 16.5l3.3 3.2L21 13"/></svg>
+    </a>
+    <h1 data-r>Verion Life</h1>
+    <p class="sub" data-r>Sign in to your client dashboard</p>
+    <label class="field" data-r>Email
+      <input id="email" type="email" autocomplete="username" inputmode="email" spellcheck="false" required>
+    </label>
+    <label class="field" data-r>Password
+      <span class="pw"><input id="pw" type="password" autocomplete="current-password" required><button type="button" class="eye" id="eye" aria-label="Show password" aria-pressed="false">Show</button></span>
+    </label>
+    <div class="msg" id="msg" role="alert"><p></p></div>
+    <button class="btn" id="go" data-r>
+      <span class="lbl">Sign in</span>
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="ok" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+    </button>
+    <p class="help" data-r>Forgot your password? Contact your account manager to reset it.</p>
+    <p class="demo" id="demo" hidden>Demo mode: this site isn’t connected to a lead database yet, so any email and password opens the sample dashboard.</p>
+  </form>
+  <p class="about" data-r>The Verion Life client dashboard shows every quote request from the website, your booked calls and your follow-ups in one place.</p>
+  <a class="back" href="../index.html" data-r>← Back to the website</a>
+</main>
+
+<script src="../config.js"></script>
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const API = String((window.VERION_CONFIG || {}).DASHBOARD_API_URL || '').trim();
+  const TOKK = 'verion_session';
+  const store = { get: k => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { } } };
+  const DASH = '../crm.html';
+
+  // already signed in on this device: go straight to the dashboard
+  if (API && store.get(TOKK)) { location.replace(DASH); return; }
+
+  const $ = id => document.getElementById(id);
+  const f = $('f'), email = $('email'), pw = $('pw'), go = $('go'), msg = $('msg');
+  document.querySelectorAll('[data-r]').forEach((el, i) => el.style.animationDelay = (0.18 + i * 0.06) + 's');
+  if (!API) $('demo').hidden = false;
+
+  const say = (text, kind = 'err') => { msg.className = 'msg on ' + kind; msg.firstElementChild.textContent = text; };
+  const hush = () => { msg.className = 'msg'; };
+  const shake = () => { f.classList.remove('shake'); void f.offsetWidth; f.classList.add('shake'); };
+  f.addEventListener('animationend', e => { if (e.animationName === 'shake') f.classList.remove('shake'); });
+
+  const m = new URLSearchParams(location.search).get('m');
+  if (m === 'out') say('You’re signed out.', 'info');
+  if (m === 'expired') say('Your session ended. Please sign in again.', 'info');
+
+  $('eye').addEventListener('click', e => {
+    const show = pw.type === 'password';
+    pw.type = show ? 'text' : 'password';
+    e.currentTarget.textContent = show ? 'Hide' : 'Show';
+    e.currentTarget.setAttribute('aria-pressed', show);
+    e.currentTarget.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    pw.focus({ preventScroll: true });
+  });
+  [email, pw].forEach(i => i.addEventListener('input', () => { i.classList.remove('bad'); if (msg.classList.contains('err')) hush(); }));
+
+  const wait = ms => new Promise(r => setTimeout(r, reduce ? 0 : ms));
+  async function success() {
+    go.classList.remove('busy'); go.classList.add('done');
+    await wait(520);
+    document.body.classList.add('leaving');
+    await wait(260);
+    location.href = DASH;
+  }
+
+  f.addEventListener('submit', async e => {
+    e.preventDefault();
+    const em = email.value.trim(), p = pw.value;
+    const badEmail = !/^\S+@\S+\.\S+$/.test(em), badPw = !p;
+    email.classList.toggle('bad', badEmail); pw.classList.toggle('bad', badPw);
+    if (badEmail || badPw) { say(badEmail ? 'Enter the email address for your account.' : 'Enter your password.'); shake(); (badEmail ? email : pw).focus(); return; }
+    hush(); go.classList.add('busy');
+    if (!API) { await wait(600); return success(); }
+    try {
+      // text/plain JSON keeps this a "simple" request that Google Apps Script answers without a CORS preflight
+      const r = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'login', email: em, password: p }) });
+      const j = await r.json();
+      if (!j.ok) throw Object.assign(new Error(j.error), { code: j.error });
+      store.set(TOKK, j.token);
+      store.set('verion_user', j.user || em);
+      success();
+    } catch (x) {
+      go.classList.remove('busy');
+      say(x.code === 'bad_login' ? 'That email and password don’t match.'
+        : x.code === 'locked' ? 'Too many tries. Wait 15 minutes and try again.'
+        : 'Can’t reach the server. Check your connection and try again.');
+      if (x.code === 'bad_login') pw.classList.add('bad');
+      shake(); pw.select();
+    }
+  });
+})();
+</script>
+</body>
+</html>

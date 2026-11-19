@@ -12,10 +12,13 @@
   /* Live mode: with DASHBOARD_API_URL set (Google Sheet web app), real leads replace the sample data */
   const API = String(CFG.DASHBOARD_API_URL || '').trim();
   const LIVE_MODE = !!API;
-  const KEYK = 'verion_dash_key';
-  let apiKey = ''; try { apiKey = localStorage.getItem(KEYK) || ''; } catch { }
+  const TOKK = 'verion_session';
+  let token = '', user = '';
+  try { token = localStorage.getItem(TOKK) || ''; user = localStorage.getItem('verion_user') || ''; } catch { }
   let server = [];
   if (LIVE_MODE) document.documentElement.classList.add('connected');
+  // not signed in: go to the login page before anything renders
+  if (LIVE_MODE && !token) { location.replace('login/'); return; }
   const EASE = 'cubic-bezier(.16,1,.3,1)', SPRING = 'cubic-bezier(.34,1.3,.64,1)';
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -714,7 +717,8 @@
         </div>
         ${LIVE_MODE ? `<div class="card" data-rise><div class="card-h"><h2>Lead database</h2><small class="ok-t">Google Sheet</small></div>
           <p class="hint" style="margin:0 0 16px">Every quote sent from the website lands in your Google Sheet and shows up here within 20 seconds. Stage, notes and call times you change here are saved back to the sheet.</p>
-          <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn sm" id="syncBtn">Refresh now</button><button type="button" class="btn ghost sm" id="signOut">Sign out on this device</button></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn sm" id="syncBtn">Refresh now</button><button type="button" class="btn ghost sm" id="signOut">Sign out</button></div>
+          ${user ? `<p class="hint">Signed in as ${esc(user)}</p>` : ''}
         </div>` : `<div class="card" data-rise><div class="card-h"><h2>Demo</h2></div>
           <p class="hint" style="margin:0 0 16px">Sample leads, plus anything you change here, are stored in this browser only. Set <code>DASHBOARD_API_URL</code> in <code>config.js</code> to show real leads from the website.</p>
           <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn sm" id="simBtn">${ic('bolt', 16)}Simulate a new lead</button><button type="button" class="btn ghost sm" id="resetBtn">Reset demo data</button></div>
@@ -768,18 +772,22 @@
   });
 
   /* =====================================================================
-     LIVE MODE: Google Sheet as the database (see apps-script/Code.gs)
+     LIVE MODE: Google Sheet as the database, email + password logins (see apps-script/Code.gs)
      ===================================================================== */
   const pending = new Set();
   const syncT = {};
   let pollT = 0, polling = false;
-  const apiURL = params => { const u = new URL(API); Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v)); return u.href; };
-  async function fetchLeads() {
-    const r = await fetch(apiURL({ action: 'list', key: apiKey, t: Date.now() }));
+  // text/plain JSON = a "simple" request, so Apps Script answers without a CORS preflight
+  async function api(body) {
+    const r = await fetch(API, { method: 'POST', body: JSON.stringify(Object.assign({ token }, body)) });
     const j = await r.json();
     if (!j.ok) { const e = new Error(j.error || 'error'); e.auth = j.error === 'unauthorized'; throw e; }
-    return Array.isArray(j.leads) ? j.leads : [];
+    return j;
   }
+  const fetchLeads = () => api({ action: 'list' }).then(j => {
+    if (j.user) { user = j.user; try { localStorage.setItem('verion_user', user); } catch { } }
+    return Array.isArray(j.leads) ? j.leads : [];
+  });
   function setSync(state, title) {
     const b = $('#simulate'); if (!b) return;
     b.classList.toggle('load', state === 'load'); b.classList.toggle('err', state === 'err');
@@ -790,9 +798,8 @@
   function sync(l) {
     pending.add(l.id); clearTimeout(syncT[l.id]);
     syncT[l.id] = setTimeout(() => {
-      const body = new URLSearchParams({ action: 'update', key: apiKey, id: l.id, status: l.status, note: l.note || '', appt: l.appt || '', activity: JSON.stringify((l.log || []).slice(0, 60)) });
-      fetch(API, { method: 'POST', mode: 'no-cors', body })
-        .catch(() => toast('Couldn’t save to your sheet', 'Check your connection and try again', 'lost'))
+      api({ action: 'update', id: l.id, status: l.status, note: l.note || '', appt: l.appt || '', activity: JSON.stringify((l.log || []).slice(0, 60)) })
+        .catch(e => e.auth ? toLogin('expired') : toast('Couldn’t save to your sheet', 'Check your connection and try again', 'lost'))
         .finally(() => setTimeout(() => pending.delete(l.id), 4000));
     }, 350);
   }
@@ -803,7 +810,7 @@
     rise($$('[data-rise]', $(`.view[data-view="${view}"]`)).filter(x => !(x === detailEl && sheet.matches)));
   }
   async function poll(manual) {
-    if (!apiKey || polling) return;
+    if (!token || polling) return;
     polling = true; setSync('load');
     try {
       const rows = await fetchLeads();
@@ -828,66 +835,37 @@
       setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
       if (manual && !arrived) toast('Up to date', 'Synced with your Google Sheet', 'check');
     } catch (e) {
-      if (e.auth) { forgetKey(); lockScreen('That key no longer works. Enter the current one.'); }
-      else { setSync('err', 'Can’t reach your Google Sheet right now'); if (manual) toast('Can’t reach your sheet', 'Check your connection', 'lost'); }
+      if (e.auth) return toLogin('expired');
+      setSync('err', 'Can’t reach your Google Sheet right now');
+      if (manual) toast('Can’t reach your sheet', 'Check your connection', 'lost');
     } finally { polling = false; }
   }
-  function forgetKey() { apiKey = ''; try { localStorage.removeItem(KEYK); } catch { } clearInterval(pollT); }
-  function signOut() {
-    forgetKey(); server = []; build(); rerenderAll();
-    lockScreen('Signed out on this device.');
+  function forget() { token = ''; clearInterval(pollT); try { localStorage.removeItem(TOKK); } catch { } }
+  // leave for the login page: the dashboard fades out, the login card rises in
+  function toLogin(reason) {
+    forget();
+    const url = 'login/' + (reason ? '?m=' + reason : '');
+    if (reduce) return location.replace(url);
+    anim(document.body, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' }).finished.then(() => location.replace(url));
+  }
+  async function signOut() {
+    try { await api({ action: 'logout' }); } catch { /* already gone */ }
+    toLogin('out');
   }
   async function connect() {
     const b = $('#simulate'); b.innerHTML = '<i></i><span>Live</span>'; b.title = 'Connecting to your Google Sheet…';
-    if (!apiKey) return lockScreen();
     setSync('load');
     try {
       server = await fetchLeads(); build(); rerenderAll();
       setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
       clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) poll(); }, 20000);
     } catch (e) {
-      if (e.auth) { forgetKey(); lockScreen('That key didn’t work.'); }
-      else { setSync('err', 'Can’t reach your Google Sheet'); toast('Can’t reach your Google Sheet', 'Check DASHBOARD_API_URL in config.js', 'lost'); }
+      if (e.auth) return toLogin('expired');
+      setSync('err', 'Can’t reach your Google Sheet');
+      toast('Can’t reach your Google Sheet', 'Check DASHBOARD_API_URL in config.js', 'lost');
     }
   }
-  document.addEventListener('visibilitychange', () => { if (LIVE_MODE && apiKey && !document.hidden) poll(); });
-
-  function lockScreen(msg = '') {
-    if ($('.lock')) return;
-    const w = document.createElement('div');
-    w.className = 'lock';
-    w.innerHTML = `<form class="lock-card" autocomplete="off">
-      <span class="lock-ic">${ic('settings', 22)}</span>
-      <h2>Verion Life dashboard</h2>
-      <p class="sub">Enter your dashboard key. You only need to do this once on each device.</p>
-      <input type="password" placeholder="Dashboard key" aria-label="Dashboard key" required>
-      <p class="lock-err" role="alert">${esc(msg)}</p>
-      <button class="btn">Open dashboard</button>
-    </form>`;
-    document.body.append(w);
-    const f = $('form', w), inp = $('input', w), err = $('.lock-err', w), btn = $('button', w);
-    anim(w, [{ opacity: 0 }, { opacity: 1 }], { duration: 260 });
-    anim(f, [{ opacity: 0, transform: 'translateY(18px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 560, easing: SPRING, delay: 60 });
-    setTimeout(() => inp.focus(), 80);
-    f.addEventListener('submit', async e => {
-      e.preventDefault();
-      apiKey = inp.value.trim(); if (!apiKey) return;
-      btn.disabled = true; btn.textContent = 'Checking…'; err.textContent = '';
-      try {
-        const rows = await fetchLeads();
-        try { localStorage.setItem(KEYK, apiKey); } catch { }
-        anim(w, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' }).finished.then(() => w.remove());
-        server = rows; build(); rerenderAll();
-        setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
-        clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) poll(); }, 20000);
-      } catch (x) {
-        apiKey = '';
-        err.textContent = x.auth ? 'That key didn’t work. Check it and try again.' : 'Can’t reach your Google Sheet. Check your connection.';
-        anim(f, [{ transform: 'translateX(0)' }, { transform: 'translateX(-8px)' }, { transform: 'translateX(7px)' }, { transform: 'translateX(-4px)' }, { transform: 'none' }], { duration: 380, easing: 'ease-out' });
-        btn.disabled = false; btn.textContent = 'Open dashboard'; inp.select();
-      }
-    });
-  }
+  document.addEventListener('visibilitychange', () => { if (LIVE_MODE && token && !document.hidden) poll(); });
 
   /* ---------- Boot ---------- */
   const RENDER = { overview: renderOverview, leads: renderLeads, calendar: renderCalendar, inbox: renderInbox, reviews: renderReviews, settings: renderSettings };
