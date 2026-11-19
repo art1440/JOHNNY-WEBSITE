@@ -7,57 +7,6 @@
   const onScroll = () => header && header.classList.toggle('scrolled', scrollY > 10);
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
-  /* ---------- Split titles into words for a staggered rise ---------- */
-  document.querySelectorAll('[data-split]').forEach(el => {
-    let i = 0;
-    const walk = node => [...node.childNodes].forEach(n => {
-      if (n.nodeType === 3) {
-        const frag = document.createDocumentFragment();
-        n.textContent.split(/(\s+)/).forEach(part => {
-          if (!part) return;
-          if (/^\s+$/.test(part)) { frag.append(part); return; }
-          const w = document.createElement('span'); w.className = 'w';
-          const s = document.createElement('span'); s.textContent = part; s.style.setProperty('--i', i++);
-          w.append(s); frag.append(w);
-        });
-        n.replaceWith(frag);
-      } else if (n.nodeType === 1) walk(n);
-    });
-    walk(el); el.classList.add('split');
-  });
-
-  /* ---------- Reveal on scroll ---------- */
-  const io = new IntersectionObserver(entries => entries.forEach(e => {
-    if (!e.isIntersecting) return;
-    e.target.classList.add('in');
-    e.target.querySelectorAll('[data-count]').forEach(count);
-    io.unobserve(e.target);
-  }), { threshold: 0.18, rootMargin: '0px 0px -6% 0px' });
-  document.querySelectorAll('.reveal, .split, .frame').forEach(el => io.observe(el));
-
-  /* ---------- Counters ---------- */
-  function count(el) {
-    if (el.dataset.done) return; el.dataset.done = 1;
-    const to = parseFloat(el.dataset.count), dec = (el.dataset.count.split('.')[1] || '').length;
-    if (reduce) { el.textContent = to.toFixed(dec); return; }
-    const t0 = performance.now(), dur = 1600;
-    const tick = t => {
-      const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 4);
-      el.textContent = (to * e).toFixed(dec);
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }
-
-  /* ---------- Stars ---------- */
-  const star = '<svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L10 14.8l-5.2 2.8 1-5.8L1.5 7.7l5.9-.8L10 1.5z"/></svg>';
-  document.querySelectorAll('[data-stars]').forEach(el => { el.innerHTML = star.repeat(+el.dataset.stars || 5); el.setAttribute('aria-label', `${el.dataset.stars || 5} de 5 estrellas`); });
-
-  /* ---------- Marquee: duplicate content for a seamless loop ---------- */
-  document.querySelectorAll('.marquee .track').forEach(t => {
-    [...t.children].forEach(c => { const d = c.cloneNode(true); d.setAttribute('aria-hidden', 'true'); t.append(d); });
-  });
-
   /* ---------- Glass spheres drift up as you scroll (CSS scroll-timeline does it on the compositor; JS only as fallback) ---------- */
   if (!reduce && !(window.CSS && CSS.supports('animation-timeline', 'scroll()'))) {
     const orbs = [...document.querySelectorAll('.orb')], speed = [1.1, 0.4];
@@ -66,18 +15,6 @@
     addEventListener('scroll', () => { if (!sraf) sraf = requestAnimationFrame(drift); }, { passive: true });
     drift();
   }
-
-  /* ---------- Pause looping animations while they're off screen ---------- */
-  const loopIO = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('paused', !e.isIntersecting)), { rootMargin: '100px' });
-  document.querySelectorAll('.marquee, .cta').forEach(el => loopIO.observe(el));
-
-  /* ---------- "Get a quote" links: glide to the form, focus first answer ---------- */
-  document.querySelectorAll('a[href="#quote"]').forEach(a => a.addEventListener('click', e => {
-    const form = document.getElementById('quote'); if (!form) return;
-    e.preventDefault();
-    scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
-    setTimeout(() => form.querySelector('.step.active input')?.focus({ preventScroll: true }), 600);
-  }));
 
   /* ---------- Qualifying form ---------- */
   const form = document.getElementById('quote');
