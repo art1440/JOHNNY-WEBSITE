@@ -14,6 +14,10 @@ window.VERION_CONFIG = {
      When set, people can book a call right after submitting the form. */
   BOOKING_URL: "",
 
+  /* Your Instagram profile link, e.g. "https://instagram.com/yourhandle".
+     Leave empty and the button stays on the page but goes nowhere. */
+  INSTAGRAM_URL: "",
+
   /* Tag added to every lead so you can filter/automate on it in the CRM. */
   LEAD_SOURCE: "Verion Life website",
 };

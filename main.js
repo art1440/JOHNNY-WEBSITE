@@ -132,4 +132,11 @@
   }
   back.addEventListener('click', () => { if (i > 0) { i--; render(); } });
   render();
+
+  // Instagram: real link once INSTAGRAM_URL is set in config.js; until then it's inert
+  const ig = document.getElementById('igBtn');
+  if (ig) {
+    if (window.VERION_CONFIG && window.VERION_CONFIG.INSTAGRAM_URL) ig.href = window.VERION_CONFIG.INSTAGRAM_URL;
+    else ig.addEventListener('click', e => e.preventDefault());
+  }
 })();
