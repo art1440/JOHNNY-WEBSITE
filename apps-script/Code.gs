@@ -9,6 +9,7 @@
  *
  * Run setup() once from the editor: it creates the "Leads" tab and prints your dashboard key.
  * Logins: open the Sheet → menu "Verion dashboard" → "Add or change a login".
+ * New-lead email alerts go to the Sheet owner by default; change them with "Set alert emails".
  * Passwords are stored only as salted hashes (Script Properties), never in the sheet.
  */
 const SHEET_NAME = 'Leads';
@@ -44,13 +45,16 @@ function doPost(e) {
   const p = (e && e.parameter) || {};
   const lock = LockService.getScriptLock();
   lock.waitLock(15000);
+  let res;
   try {
-    if (p.action === 'update') return json_(authed_(p) ? update_(p) : { ok: false, error: 'unauthorized' });
-    if (p.action === 'login') return json_(login_(p));
-    return json_(addLead_(p));
+    if (p.action === 'update') res = authed_(p) ? update_(p) : { ok: false, error: 'unauthorized' };
+    else if (p.action === 'login') res = login_(p);
+    else res = addLead_(p);
   } finally {
     lock.releaseLock();
   }
+  if (res.alert) { alertNewLead_(res.alert); delete res.alert; }   // never blocks or breaks saving the lead
+  return json_(res);
 }
 
 function addLead_(p) {
@@ -67,7 +71,7 @@ function addLead_(p) {
     if (c === 'updated_at') return now;
     return FROM_FORM.indexOf(c) > -1 ? clean_(p[c]) : '';
   }));
-  return { ok: true, id: id };
+  return { ok: true, id: id, alert: p };
 }
 
 function update_(p) {
@@ -166,6 +170,9 @@ function onOpen() {
     .addItem('Remove a login', 'removeLoginPrompt')
     .addItem('List logins', 'listLogins')
     .addSeparator()
+    .addItem('Set alert emails', 'setAlertEmails')
+    .addItem('Send a test alert', 'sendTestAlert')
+    .addSeparator()
     .addItem('Sign out every device', 'signOutEverywhere')
     .addToUi();
 }
@@ -217,4 +224,113 @@ function signOutEverywhere() {
   if (ui.alert('Sign out every device?', 'Everyone will need to sign in again with their username and password.', ui.ButtonSet.OK_CANCEL) !== ui.Button.OK) return;
   PropertiesService.getScriptProperties().setProperty('DASHBOARD_KEY', Utilities.getUuid().replace(/-/g, '').slice(0, 20));
   ui.alert('Done. All devices are signed out.');
+}
+
+/* ===================== New-lead email alerts ===================== */
+const INTEREST = { 'life-insurance': 'Life insurance', 'grow-savings': 'Save & grow money', 'living-benefits': 'Living benefits', 'all-3': 'All 3 benefits',
+  family: 'Spouse & kids', spouse: 'Spouse / partner', 'final-expenses': 'Final expenses', mortgage: 'Mortgage / debts' };
+const SAVINGS = { '100-200': '$100–$200 / month', '200-300': '$200–$300 / month', '300-400': '$300–$400 / month', '500+': '$500+ / month' };
+
+function alertEmails_() {
+  const saved = PropertiesService.getScriptProperties().getProperty('ALERT_EMAILS');
+  if (saved !== null) return saved;                       // '' means alerts are turned off
+  return Session.getEffectiveUser().getEmail() || '';     // default: the Sheet owner
+}
+
+function alertNewLead_(p) {
+  try {
+    const to = alertEmails_();
+    if (!to) return;
+    const m = alertMessage_(p);
+    MailApp.sendEmail({ to: to, subject: m.subject, htmlBody: m.html, body: m.text, name: 'Verion Life leads', replyTo: /@/.test(p.email || '') ? String(p.email) : undefined });
+  } catch (err) {
+    console.error('Lead alert email failed: ' + err);     // shows under Executions; the lead is already saved
+  }
+}
+
+function alertMessage_(p) {
+  const name = String(p.full_name || p.first_name || 'New lead').trim();
+  const pr = Math.round(+p.priority);
+  const prio = pr >= 1 && pr <= 10 ? pr : 0;
+  const heat = prio >= 8 ? 'Hot lead' : prio >= 5 ? 'Interested' : prio ? 'Just looking' : '';
+  const callShort = shortCall_(p.call_local);
+  const subject = 'New lead: ' + name + (prio ? ' · ' + prio + '/10' : '') + (callShort ? ' · call ' + callShort : '');
+
+  const phone = String(p.phone || ''), tel = phone.replace(/[^\d+]/g, ''), email = String(p.email || '');
+  const page = String(p.page || '');
+  const dash = /^https:\/\//.test(page) ? page.replace(/[?#].*$/, '').replace(/[^\/]*$/, '') + 'crm.html' : '';
+  const where = page ? page.replace(/^https?:\/\//, '').replace(/[?#].*$/, '').replace(/\/$/, '') : '';
+  const ads = ['utm_source', 'utm_medium', 'utm_campaign'].map(function (k) { return p[k]; }).filter(Boolean).join(' / ') || (p.gclid ? 'Google Ads' : p.fbclid ? 'Facebook / Instagram ad' : '');
+
+  const rows = [
+    ['Wants a call', p.call_local ? p.call_local + (p.call_timezone ? ' (' + p.call_timezone + ')' : '') : ''],
+    ['Interested in', INTEREST[p.protecting || p.interest] || p.protecting || ''],
+    ['Age range', p.age_range || ''],
+    ['Can save', SAVINGS[p.coverage_amount || p.savings_monthly] || p.coverage_amount || ''],
+    ['From', where],
+    ['Ad', ads],
+  ].filter(function (r) { return r[1]; });
+
+  const bar = prio ? '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 2px"><tr>' +
+    Array.from({ length: 10 }, function (_, k) {
+      return '<td style="width:22px;height:8px;padding:0 2px"><div style="height:8px;border-radius:3px;background:' + (k < prio ? (prio >= 8 ? '#3ccf6a' : prio >= 5 ? '#8ef0a0' : '#c2d0c6') : '#e8efe9') + '"></div></td>';
+    }).join('') + '</tr></table>' : '';
+
+  const html =
+    '<div style="background:#f3fff3;padding:24px 12px;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0a2a14">' +
+    '<div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #d6f5dc;border-radius:20px;padding:26px 24px">' +
+    '<div style="font-size:13px;color:#3d7a52;letter-spacing:.02em">NEW LEAD · VERION LIFE</div>' +
+    '<div style="font-size:24px;font-weight:600;margin:6px 0 2px">' + esc_(name) + '</div>' +
+    (prio ? '<div style="font-size:14px;color:#17803a;font-weight:600">' + prio + '/10 · ' + heat + '</div>' + bar +
+      '<div style="font-size:12px;color:#6f8a76">How important a more secure financial future is to them</div>' : '') +
+    '<div style="margin:20px 0 6px">' +
+    (tel ? '<a href="tel:' + esc_(tel) + '" style="display:inline-block;background:#98ff98;background-image:linear-gradient(#c8ffc8,#98ff98 50%,#3ccf6a);color:#0a2a14;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:999px;margin:0 8px 8px 0">Call ' + esc_(phone) + '</a>' : '') +
+    (email ? '<a href="mailto:' + esc_(email) + '" style="display:inline-block;border:1px solid #c7e6cd;color:#0a2a14;text-decoration:none;padding:11px 18px;border-radius:999px;margin:0 8px 8px 0">' + esc_(email) + '</a>' : '') +
+    '</div>' +
+    '<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;font-size:14px;border-top:1px solid #e8efe9;margin-top:10px">' +
+    rows.map(function (r) { return '<tr><td style="padding:10px 0;color:#5a7563;border-bottom:1px solid #f0f4f1;width:38%">' + r[0] + '</td><td style="padding:10px 0;text-align:right;border-bottom:1px solid #f0f4f1">' + esc_(r[1]) + '</td></tr>'; }).join('') +
+    '</table>' +
+    (dash ? '<div style="margin-top:20px"><a href="' + esc_(dash) + '" style="color:#1e8a42;font-weight:600;text-decoration:none">Open the dashboard →</a></div>' : '') +
+    '</div><div style="text-align:center;font-size:11px;color:#8aa093;margin-top:12px">Sent by your Verion Life lead sheet. Change who gets these in the Sheet: Verion dashboard → Set alert emails.</div></div>';
+
+  const text = subject + '\n\n' + (phone ? 'Phone: ' + phone + '\n' : '') + (email ? 'Email: ' + email + '\n' : '') + (prio ? 'Priority: ' + prio + '/10 (' + heat + ')\n' : '') +
+    rows.map(function (r) { return r[0] + ': ' + r[1]; }).join('\n') + (dash ? '\n\nDashboard: ' + dash : '');
+  return { subject: subject, html: html, text: text };
+}
+
+// "Viernes, 20 de noviembre, 5:30 pm" → "vie 20, 5:30 pm" (keeps the subject line short on a phone)
+function shortCall_(s) {
+  s = String(s || '').trim();
+  const m = s.match(/^(\S+?),?\s+(\d{1,2})\s+de\s+\S+,?\s+(.+)$/i);
+  return m ? m[1].slice(0, 3).toLowerCase() + ' ' + m[2] + ', ' + m[3] : s;
+}
+
+function esc_(v) {
+  return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+}
+
+function setAlertEmails() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('New-lead email alerts', 'Who should get an email for every new lead?\nNow: ' + (alertEmails_() || 'nobody (off)') +
+    '\n\nSeparate several addresses with commas. Type OFF to turn alerts off.', ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const v = r.getResponseText().trim();
+  if (/^off$/i.test(v)) { PropertiesService.getScriptProperties().setProperty('ALERT_EMAILS', ''); return ui.alert('Alerts are off.'); }
+  const list = v.split(/[,;\s]+/).filter(Boolean);
+  if (!list.length || !list.every(function (x) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x); })) return ui.alert('That doesn’t look like an email address. Nothing changed.');
+  PropertiesService.getScriptProperties().setProperty('ALERT_EMAILS', list.join(','));
+  ui.alert('Saved. New leads will be emailed to: ' + list.join(', '));
+}
+
+function sendTestAlert() {
+  const ui = SpreadsheetApp.getUi(), to = alertEmails_();
+  if (!to) return ui.alert('Alerts are off. Use "Set alert emails" first.');
+  const inTwoHours = new Date(Date.now() + 2 * 3600 * 1000);
+  const m = alertMessage_({
+    full_name: 'Test Lead (sample)', phone: '(555) 010-0000', email: 'test@example.com', priority: '9', protecting: 'all-3',
+    age_range: '35-49', coverage_amount: '200-300', page: 'https://verionlife.netlify.app/',
+    call_local: Utilities.formatDate(inTwoHours, Session.getScriptTimeZone(), 'EEEE, d MMM, h:mm a'), call_timezone: Session.getScriptTimeZone(),
+  });
+  MailApp.sendEmail({ to: to, subject: '[TEST] ' + m.subject, htmlBody: m.html, body: m.text, name: 'Verion Life leads' });
+  ui.alert('Test alert sent to ' + to + '. Check your inbox (and spam, the first time).');
 }

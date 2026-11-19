@@ -57,6 +57,10 @@ Linked from the site footer ("Panel del agente"), hidden from search engines.
 (issues a new internal key, so everyone has to sign in again). Passwords are stored only as salted hashes in the
 script's properties, never in the sheet. 5 wrong passwords lock that username for 10 minutes.
 
+**New-lead email alerts:** every new lead is emailed right away (to the Sheet owner by default), with tap-to-call,
+priority, the call time they picked and a link to the dashboard. Sheet menu *Verion dashboard* → **Set alert emails**
+(several addresses with commas, or OFF) and **Send a test alert**. A failed email never stops the lead being saved.
+
 If you change `Code.gs` later, use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
 Keep the `id` column in the sheet; you can add, hide or reorder other columns freely.
 
