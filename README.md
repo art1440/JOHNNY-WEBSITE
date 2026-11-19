@@ -36,7 +36,7 @@ It is front end only, with sample data. Changes are stored in the viewer's brows
 - **Live demo:** click *Live demo* (top right) to simulate a lead arriving. With `CRM_DEMO: true` in
   `config.js`, a quote submitted on the website in the same browser also appears in the dashboard live.
   Set it to `false` once the real CRM webhook is connected.
-- It's not linked from the site and has `noindex`, but anyone with the URL can open it. Don't put real client data in it.
+- Linked from the site footer ("Panel del agente") and hidden from search engines (`noindex`), but it has no login: anyone can open it. Don't put real client data in it.
 
 ## Photos
 See `images/README.md`. Drop files with the listed names and they appear automatically.
