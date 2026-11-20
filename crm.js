@@ -819,19 +819,48 @@
      ===================================================================== */
   const pending = new Set();
   const syncT = {};
-  let pollT = 0, polling = false;
+  // Always-on sync: one self-scheduling loop that never dies. Each fetch has a hard
+  // timeout (Apps Script can hang) and quick retries; after a failure the loop backs
+  // off 5s → 10s → 20s → 30s and keeps trying until the sheet answers again.
+  const POLL_MS = 15000, HIDDEN_MS = 60000, TIMEOUT_MS = 12000;
+  let pollT = 0, polling = false, fails = 0;
   const apiURL = params => { const u = new URL(API); Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v)); return u.href; };
+  const wait = ms => new Promise(r => setTimeout(r, ms));
   async function fetchLeads() {
-    const r = await fetch(apiURL({ action: 'list', key: apiKey, t: Date.now() }));
-    const j = await r.json();
-    if (!j.ok) { const e = new Error(j.error || 'error'); e.auth = j.error === 'unauthorized'; throw e; }
-    return Array.isArray(j.leads) ? j.leads : [];
+    let last;
+    for (let i = 0; i < 3; i++) {
+      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), TIMEOUT_MS);
+      try {
+        const r = await fetch(apiURL({ action: 'list', key: apiKey, t: Date.now() }), { signal: ctl.signal, cache: 'no-store' });
+        const j = await r.json();
+        if (!j.ok) { const e = new Error(j.error || 'error'); e.auth = j.error === 'unauthorized'; throw e; }
+        return Array.isArray(j.leads) ? j.leads : [];
+      } catch (e) { if (e.auth) throw e; last = e; }
+      finally { clearTimeout(t); }
+      if (i < 2) await wait(700 * 2 ** i);
+    }
+    throw last;
+  }
+  function schedule(ms) {
+    clearTimeout(pollT);
+    if (!apiKey) return;
+    if (ms == null) ms = fails ? Math.min(5000 * 2 ** (fails - 1), 30000) : document.hidden ? HIDDEN_MS : POLL_MS;
+    pollT = setTimeout(() => poll(), ms);
   }
   function setSync(state, title) {
     const b = $('#simulate'); if (!b) return;
     b.classList.toggle('load', state === 'load'); b.classList.toggle('err', state === 'err');
-    const s = $('span', b); if (s && state !== 'load') s.textContent = state === 'err' ? 'Offline' : 'Live';
+    const s = $('span', b); if (s && state !== 'load') s.textContent = state === 'err' ? 'Reconnecting' : 'Live';
     if (title) b.title = title;
+  }
+  function synced() {
+    if (fails >= 2) toast('Back online', 'Synced with your Google Sheet', 'check');
+    fails = 0; setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
+  }
+  function syncFailed() {
+    fails++;
+    // a single blip stays quietly "Live"; only a sustained outage changes the badge
+    if (fails >= 2 || !navigator.onLine) setSync('err', 'Can’t reach your Google Sheet — retrying automatically');
   }
   // save stage / note / call time / activity back to the sheet (debounced per lead)
   function sync(l) {
@@ -851,7 +880,7 @@
   }
   async function poll(manual) {
     if (!apiKey || polling) return;
-    polling = true; setSync('load');
+    polling = true; if (manual) setSync('load');
     try {
       const rows = await fetchLeads();
       const known = new Map(leads.map(l => [l.id, l]));
@@ -872,14 +901,14 @@
         leadHeader(); badges();
         if (view === 'leads' && selected && !detailEl.contains(document.activeElement)) showDetail(byId(selected), { animate: false });
       }
-      setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
-      if (manual && !arrived) toast('Up to date', 'Synced with your Google Sheet', 'check');
+      const wasDown = fails >= 2; synced();
+      if (manual && !arrived && !wasDown) toast('Up to date', 'Synced with your Google Sheet', 'check');
     } catch (e) {
       if (e.auth) { forgetKey(); lockScreen('You were signed out. Sign in again.'); }
-      else { setSync('err', 'Can’t reach your Google Sheet right now'); if (manual) toast('Can’t reach your sheet', 'Check your connection', 'lost'); }
-    } finally { polling = false; }
+      else { syncFailed(); if (manual) toast('Can’t reach your sheet', 'Still retrying in the background', 'lost'); }
+    } finally { polling = false; schedule(); }
   }
-  function forgetKey() { apiKey = ''; try { localStorage.removeItem(KEYK); } catch { } clearInterval(pollT); }
+  function forgetKey() { apiKey = ''; try { localStorage.removeItem(KEYK); } catch { } clearTimeout(pollT); }
   function signOut() {
     forgetKey(); server = []; build(); rerenderAll();
     lockScreen('Signed out on this device.');
@@ -890,14 +919,15 @@
     setSync('load');
     try {
       server = await fetchLeads(); build(); rerenderAll();
-      setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
-      clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) poll(); }, 20000);
+      synced(); schedule();
     } catch (e) {
       if (e.auth) { forgetKey(); lockScreen('You were signed out. Sign in again.'); }
-      else { setSync('err', 'Can’t reach your Google Sheet'); toast('Can’t reach your Google Sheet', 'Check DASHBOARD_API_URL in config.js', 'lost'); }
+      else { fails = 1; syncFailed(); schedule(); }   // never give up: the loop keeps retrying
     }
   }
   document.addEventListener('visibilitychange', () => { if (LIVE_MODE && apiKey && !document.hidden) poll(); });
+  addEventListener('online', () => { if (LIVE_MODE && apiKey) poll(); });
+  addEventListener('offline', () => { if (LIVE_MODE && apiKey) { fails = Math.max(fails, 2); setSync('err', 'You’re offline — will resync the moment you’re back'); } });
 
   // username + password → the server hands back the dashboard key, which this device remembers
   async function signIn(user, pass) {
@@ -939,8 +969,7 @@
         try { localStorage.setItem(KEYK, apiKey); } catch { }
         anim(w, [{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' }).finished.then(() => w.remove());
         server = rows; build(); rerenderAll();
-        setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
-        clearInterval(pollT); pollT = setInterval(() => { if (!document.hidden) poll(); }, 20000);
+        synced(); schedule();
       } catch (x) {
         apiKey = '';
         err.textContent = LOGIN_ERR[x.login] || 'Can’t reach your Google Sheet. Check your connection.';
