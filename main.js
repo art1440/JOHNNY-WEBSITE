@@ -34,6 +34,7 @@
     countEl.textContent = i < TOTAL ? `Paso ${i + 1} de ${TOTAL}` : 'Completo';
     back.hidden = i === 0 || i >= TOTAL;
     nextLabel.textContent = i === TOTAL - 1 ? 'Enviar' : 'Continuar';
+    form.classList.toggle('is-last', i === TOTAL - 1);
     next.disabled = !valid();
     if (i >= TOTAL) { document.getElementById('nav').style.display = 'none'; document.getElementById('fine').style.display = 'none'; }
   };
