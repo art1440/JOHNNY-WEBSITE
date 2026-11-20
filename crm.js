@@ -853,14 +853,13 @@
     const s = $('span', b); if (s && state !== 'load') s.textContent = state === 'err' ? 'Reconnecting' : 'Live';
     if (title) b.title = title;
   }
+  let lastOk = 0;
   function synced() {
-    if (fails >= 2) toast('Back online', 'Synced with your Google Sheet', 'check');
-    fails = 0; setSync('ok', 'Synced at ' + tfmt(Date.now()) + ' · click to refresh');
+    fails = 0; lastOk = Date.now(); setSync('ok', 'Synced at ' + tfmt(lastOk) + ' · click to refresh');
   }
   function syncFailed() {
-    fails++;
-    // a single blip stays quietly "Live"; only a sustained outage changes the badge
-    if (fails >= 2 || !navigator.onLine) setSync('err', 'Can’t reach your Google Sheet — retrying automatically');
+    // The badge always stays Live: hiccups are retried silently in the background.
+    fails++; setSync('ok', (lastOk ? 'Last synced ' + tfmt(lastOk) : 'Connecting') + ' · retrying in the background');
   }
   // save stage / note / call time / activity back to the sheet (debounced per lead)
   function sync(l) {
@@ -901,8 +900,8 @@
         leadHeader(); badges();
         if (view === 'leads' && selected && !detailEl.contains(document.activeElement)) showDetail(byId(selected), { animate: false });
       }
-      const wasDown = fails >= 2; synced();
-      if (manual && !arrived && !wasDown) toast('Up to date', 'Synced with your Google Sheet', 'check');
+      synced();
+      if (manual && !arrived) toast('Up to date', 'Synced with your Google Sheet', 'check');
     } catch (e) {
       if (e.auth) { forgetKey(); lockScreen('You were signed out. Sign in again.'); }
       else { syncFailed(); if (manual) toast('Can’t reach your sheet', 'Still retrying in the background', 'lost'); }
@@ -927,7 +926,7 @@
   }
   document.addEventListener('visibilitychange', () => { if (LIVE_MODE && apiKey && !document.hidden) poll(); });
   addEventListener('online', () => { if (LIVE_MODE && apiKey) poll(); });
-  addEventListener('offline', () => { if (LIVE_MODE && apiKey) { fails = Math.max(fails, 2); setSync('err', 'You’re offline — will resync the moment you’re back'); } });
+  addEventListener('offline', () => { if (LIVE_MODE && apiKey) fails = Math.max(fails, 1); });
 
   // username + password → the server hands back the dashboard key, which this device remembers
   async function signIn(user, pass) {
