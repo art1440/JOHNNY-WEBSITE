@@ -7,32 +7,6 @@
   const onScroll = () => header && header.classList.toggle('scrolled', scrollY > 10);
   addEventListener('scroll', onScroll, { passive: true }); onScroll();
 
-  /* ---------- Hero: the thing being protected rotates (su familia → sus hijos → …) ---------- */
-  const rot = document.querySelector('.rot');
-  if (rot) {
-    const words = [...rot.children];
-    let k = 0;
-    const fit = () => { rot.style.width = words[k].offsetWidth + 'px'; };
-    fit();
-    if (window.ResizeObserver) new ResizeObserver(fit).observe(words[0]);
-    else addEventListener('resize', fit);
-    if (!reduce) {
-      let paused = false;
-      const h1 = rot.closest('h1');
-      h1.addEventListener('pointerenter', () => paused = true);
-      h1.addEventListener('pointerleave', () => paused = false);
-      setTimeout(() => setInterval(() => {
-        if (paused || document.hidden) return;
-        const cur = words[k];
-        k = (k + 1) % words.length;
-        cur.classList.replace('is-on', 'is-off');
-        words[k].classList.add('is-on');
-        fit();
-        setTimeout(() => cur.classList.remove('is-off'), 700);
-      }, 2600), 1200);
-    }
-  }
-
   /* ---------- Qualifying form ---------- */
   const form = document.getElementById('quote');
   if (!form) return;

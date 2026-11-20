@@ -219,10 +219,6 @@ fieldset{border:0;min-width:0}
 .hero-side .card.lg{position:relative}
 
 /* ---------- Rotating headline word ---------- */
-.rot{display:inline-block;position:relative;vertical-align:top;height:1.1em;overflow:hidden;white-space:nowrap;transition:width .65s var(--ease)}
-.rot-w{position:absolute;left:0;top:0;line-height:1.02;transform:translateY(105%);opacity:0;filter:blur(6px);transition:transform .7s var(--ease),opacity .45s var(--ease),filter .55s var(--ease)}
-.rot-w.is-on{transform:none;opacity:1;filter:none}
-.rot-w.is-off{transform:translateY(-105%);opacity:0;filter:blur(6px)}
 
 /* ---------- Brand shield: draws on, then a light travels the rim ---------- */
 .shield{position:absolute;z-index:0;left:50%;top:51%;width:118%;aspect-ratio:360/385;translate:-50% -50%;overflow:visible;pointer-events:none}
