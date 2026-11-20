@@ -33,7 +33,7 @@
     bar.style.width = (Math.min(i, TOTAL) / TOTAL * 100) + '%';
     countEl.textContent = i < TOTAL ? `Paso ${i + 1} de ${TOTAL}` : 'Completo';
     back.hidden = i === 0 || i >= TOTAL;
-    nextLabel.textContent = i === TOTAL - 1 ? 'Obtener mi cotización gratuita' : 'Continuar';
+    nextLabel.textContent = i === TOTAL - 1 ? 'Enviar' : 'Continuar';
     next.disabled = !valid();
     if (i >= TOTAL) { document.getElementById('nav').style.display = 'none'; document.getElementById('fine').style.display = 'none'; }
   };
