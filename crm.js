@@ -55,6 +55,7 @@
     star: '<path d="m12 3 2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.8l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4.5h6V7"/>',
   };
   const ic = (n, s = 20) => `<svg class="i" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ''}</svg>`;
   const fillIcons = (root = document) => $$('[data-i]', root).forEach(e => { if (!e.firstChild) e.innerHTML = ic(e.dataset.i); });
@@ -161,7 +162,7 @@
 
   /* ---------- Persistence (this browser only) ---------- */
   const KEY = 'verion_crm_v1', LIVE = 'verion_live_leads';
-  const blank = () => ({ status: {}, appt: {}, act: {}, notes: {}, msgs: {}, read: [], prefs: { alert: true, autoreply: true, digest: false }, sims: [] });
+  const blank = () => ({ status: {}, appt: {}, act: {}, notes: {}, msgs: {}, read: [], prefs: { alert: true, autoreply: true, digest: false }, sims: [], del: [] });
   const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
   let S = Object.assign(blank(), load(KEY) || {});
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch { } };
@@ -191,10 +192,11 @@
     return l;
   };
   let leads = [];
+  const gone = new Set();   // deleted (or waiting out the Undo window): never shown, never re-added by a sync
   function build() {
-    if (LIVE_MODE) { leads = server.map(fromServer).sort((a, b) => b.created - a.created); return; }
+    if (LIVE_MODE) { leads = server.map(fromServer).filter(l => !gone.has(l.id)).sort((a, b) => b.created - a.created); return; }
     const live = (load(LIVE) || []).map(fromWebsite);
-    leads = [...live, ...S.sims, ...seed()].map(l => {
+    leads = [...live, ...S.sims, ...seed()].filter(l => !gone.has(l.id) && !S.del.includes(l.id)).map(l => {
       if (S.status[l.id]) l.status = S.status[l.id];
       if (l.id in S.appt) { if (S.appt[l.id]) l.appt = S.appt[l.id]; else delete l.appt; }
       if (l.id in S.notes) l.note = S.notes[l.id];
@@ -234,13 +236,18 @@
     el.animate([{ height: '0px', opacity: 0 }, { height: h + 'px', opacity: 1 }], { duration: 420, easing: EASE });
   }
 
-  function toast(title, sub, icon = 'check') {
+  function toast(title, sub, icon = 'check', action) {
     const t = document.createElement('div');
-    t.className = 'toast';
-    t.innerHTML = `<span class="ti">${ic(icon, 18)}</span><div><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div>`;
+    t.className = 'toast' + (action ? ' has-act' : '');
+    t.innerHTML = `<span class="ti">${ic(icon, 18)}</span><div><b>${esc(title)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</div>` +
+      (action ? `<button type="button" class="t-act">${esc(action.label)}</button><i class="t-time" style="animation-duration:${action.ms}ms"></i>` : '');
     $('#toasts').append(t);
     anim(t, [{ opacity: 0, transform: 'translateY(16px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 520, easing: SPRING });
-    setTimeout(() => anim(t, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(8px) scale(.98)' }], { duration: 220, fill: 'forwards' }).finished.then(() => t.remove()), 3400);
+    let done = false;
+    const close = () => { if (done) return; done = true; anim(t, [{ opacity: 1 }, { opacity: 0, transform: 'translateY(8px) scale(.98)' }], { duration: 220, fill: 'forwards' }).finished.then(() => t.remove()); };
+    if (action) $('.t-act', t).onclick = () => { action.fn(); close(); };
+    setTimeout(close, action ? action.ms : 3400);
+    return close;
   }
 
   /* ---------- Badges + header numbers ---------- */
@@ -362,7 +369,61 @@
     $$('button', filtersEl).forEach(b => tween($('b', b), c[b.dataset.f], String, 500));
     $$('button', filtersEl).forEach(b => { b.classList.toggle('on', b.dataset.f === filter); b.setAttribute('aria-selected', b.dataset.f === filter); });
     slide($('.ind', filtersEl), $(`[data-f="${filter}"]`, filtersEl));
+    const cu = $('#clearUsed'), n = usedLeads().length;
+    if (cu) { cu.disabled = !n; cu.title = n ? `Delete ${n} lost or finished lead${n === 1 ? '' : 's'}` : 'Nothing to clear: no lost leads or past calls'; tween($('b', cu), n, String, 500); }
   }
+
+  /* ---------- Deleting leads ----------
+     Rows leave right away (the FLIP list slides the rest up); the actual delete waits out a
+     6 s Undo window. In the sheet, deleted rows move to a "Deleted" tab, so nothing is lost. */
+  const UNDO_MS = 6000;
+  // "used": lost, or booked and the call already happened
+  const usedLeads = () => leads.filter(l => l.status === 'lost' || (l.status === 'booked' && l.appt && l.appt < Date.now() - HOUR));
+  const pendingDel = new Map();   // batch id -> leads
+  function removeLeads(list) {
+    if (!list.length) return;
+    const ids = new Set(list.map(l => l.id)), batch = 'd' + Date.now() + Math.random();
+    list.forEach(l => gone.add(l.id));
+    if (selected && ids.has(selected)) {   // hand the selection to the next lead in view
+      const vis = visible(), i = vis.findIndex(l => l.id === selected);
+      selected = (vis.slice(i + 1).find(l => !ids.has(l.id)) || vis.slice(0, i).reverse().find(l => !ids.has(l.id)))?.id || null;
+      showDetail(selected ? byId(selected) : null);
+      if (!selected) openSheet(false);
+    }
+    leads = leads.filter(l => !ids.has(l.id));
+    pendingDel.set(batch, list);
+    renderRows(); leadHeader(); badges();
+    const name = list.length === 1 ? shortName(list[0]) + ' deleted' : list.length + ' leads deleted';
+    toast(name, LIVE_MODE ? 'Moved to the “Deleted” tab of your sheet' : 'Removed from this dashboard', 'trash', {
+      label: 'Undo', ms: UNDO_MS, fn: () => {
+        clearTimeout(timer); pendingDel.delete(batch);
+        list.forEach(l => gone.delete(l.id));
+        leads = [...leads, ...list].sort((a, b) => b.created - a.created);
+        renderRows({ stagger: true }); leadHeader(); badges();
+      },
+    });
+    const timer = setTimeout(() => commitDelete(batch), UNDO_MS);
+  }
+  async function commitDelete(batch, beacon) {
+    const list = pendingDel.get(batch); if (!list) return;
+    pendingDel.delete(batch);
+    if (!LIVE_MODE) { S.del = [...new Set([...S.del, ...list.map(l => l.id)])]; save(); return; }
+    const body = new URLSearchParams({ action: 'delete', key: apiKey, ids: list.map(l => l.id).join(',') });
+    if (beacon) { navigator.sendBeacon?.(API, body); return; }
+    let ok = false;
+    for (let i = 0; i < 3 && !ok; i++) {
+      try { const j = await (await fetch(API, { method: 'POST', body })).json(); ok = j.ok && 'deleted' in j; if (j.ok && !ok) break; }
+      catch { await wait(1500 * (i + 1)); }
+    }
+    if (!ok) {   // put them back so nothing silently disappears
+      list.forEach(l => gone.delete(l.id));
+      leads = [...leads, ...list.filter(l => !byId(l.id))].sort((a, b) => b.created - a.created);
+      renderRows({ stagger: true }); leadHeader(); badges();
+      toast('Couldn’t delete from your sheet', 'Update the Apps Script (README → “Deleting leads”) and try again', 'lost');
+    }
+  }
+  // closing the tab during the Undo window still deletes
+  addEventListener('pagehide', () => [...pendingDel.keys()].forEach(b => commitDelete(b, true)));
 
   /* ---------- Detail pane ---------- */
   let detailToken = 0;
@@ -410,6 +471,7 @@
       <dl class="facts" data-d>${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
       <div class="note" data-d><label for="dNote">Note</label><textarea id="dNote" rows="1" placeholder="Add a note for yourself…">${esc(l.note)}</textarea></div>
       <div class="acts" data-d><h3>Activity</h3><ol>${l.act.map(actHTML).join('')}</ol></div>
+      <button type="button" class="d-del" data-act="delete" data-d>${ic('trash', 16)}Delete lead</button>
     </div>`;
   }
   const ACT_ICON = { origin: null, text: 'text', booked: 'booked', lost: 'lost', stage: 'check', note: 'note' };
@@ -469,6 +531,7 @@
       if (n) { n.focus(); select(n.dataset.id); }
     }
   });
+  $('#clearUsed').addEventListener('click', () => removeLeads(usedLeads()));
   filtersEl.addEventListener('click', e => {
     const b = e.target.closest('[data-f]'); if (!b || b.dataset.f === filter) return;
     filter = b.dataset.f; leadHeader(); renderRows();
@@ -546,6 +609,7 @@
       case 'text': return toggleCompose($('.compose', detailEl).getAttribute('aria-hidden') !== 'false');
       case 'cancel': return toggleCompose(false);
       case 'book': return setStatus(l, 'booked');
+      case 'delete': return removeLeads([l]);
       case 'send': {
         const msg = $('.compose textarea', detailEl).value.trim(); if (!msg) return;
         (S.msgs[l.id] ||= []).push(['out', msg, Date.now()]); save();
@@ -885,6 +949,7 @@
       const known = new Map(leads.map(l => [l.id, l]));
       let changed = false, arrived = 0;
       rows.map(fromServer).forEach(f => {
+        if (gone.has(f.id)) return;
         const k = known.get(f.id);
         if (!k) { arrive(f); arrived++; return; }
         if (pending.has(k.id)) return;                       // our own save hasn't landed yet

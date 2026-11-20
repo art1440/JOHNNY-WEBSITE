@@ -182,6 +182,17 @@ h2{font-family:var(--serif);font-weight:600;font-size:1.25rem;letter-spacing:-.0
 .btn.sm{height:42px;font-size:.92rem;padding:0 16px}
 .btn[disabled]{opacity:.45;pointer-events:none}
 .hint{margin-top:12px;color:var(--muted);font-size:.86rem}
+.d-del{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:8px 14px 8px 10px;border-radius:999px;color:var(--muted);font-size:.9rem;
+  transition:color .2s,background-color .2s,transform .3s var(--spring)}
+.d-del:hover{color:var(--red);background:#ffe8e5}
+.d-del:active{transform:scale(.95)}
+.clear-used{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 16px 0 13px;border-radius:999px;border:1px solid var(--line-2);background:rgba(255,255,255,.7);color:var(--muted);font-size:.95rem;
+  transition:color .2s,border-color .2s,background-color .2s,opacity .2s,transform .3s var(--spring)}
+.clear-used svg{width:18px;height:18px}
+.clear-used b{font-weight:500;font-variant-numeric:tabular-nums}
+.clear-used:not([disabled]):hover{color:var(--red);border-color:rgba(198,61,54,.35);background:#fff5f4}
+.clear-used:not([disabled]):active{transform:scale(.95)}
+.clear-used[disabled]{opacity:.45;cursor:default}
 .hr{height:1px;background:var(--line);margin:22px 0}
 .compose{overflow:hidden;height:0}
 .compose-in{padding-top:14px;display:grid;gap:10px}
@@ -342,6 +353,13 @@ code{font-family:var(--mono);font-size:.84em;padding:1px 6px;border-radius:6px;b
 .toast .ti{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none;background:var(--grad);color:var(--text)}
 .toast b{display:block;font-weight:500;font-size:.95rem}
 .toast small{display:block;color:var(--muted);font-size:.84rem;margin-top:2px}
+.toast.has-act{position:relative;overflow:hidden;padding-right:12px}
+.t-act{margin-left:8px;flex:none;height:36px;padding:0 14px;border-radius:999px;font-weight:600;font-size:.9rem;color:var(--text);background:rgba(60,207,106,.16);transition:background-color .2s,transform .3s var(--spring)}
+.t-act:hover{background:rgba(60,207,106,.3)}
+.t-act:active{transform:scale(.94)}
+.t-time{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--green);transform-origin:left;animation:t-drain linear forwards}
+@keyframes t-drain{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){.t-time{animation:none;opacity:.4}}
 .scrim{display:none}
 
 /* ---------- Live mode (connected to the Google Sheet) ---------- */

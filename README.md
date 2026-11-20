@@ -61,6 +61,10 @@ script's properties, never in the sheet. 5 wrong passwords lock that username fo
 priority, the call time they picked and a link to the dashboard. Sheet menu *Verion dashboard* → **Set alert emails**
 (several addresses with commas, or OFF) and **Send a test alert**. A failed email never stops the lead being saved.
 
+**Deleting leads:** *Delete lead* (bottom of a lead's details) or *Clear used* (Leads header: lost leads and booked
+calls that already happened). You get 6 seconds to Undo. Deleted rows move to a **Deleted** tab in the sheet, never
+destroyed: paste a row back into *Leads* to restore it. Needs the current `Code.gs` (redeploy as below).
+
 If you change `Code.gs` later, use **Deploy → Manage deployments → Edit → New version** so the URL stays the same.
 Keep the `id` column in the sheet; you can add, hide or reorder other columns freely.
 

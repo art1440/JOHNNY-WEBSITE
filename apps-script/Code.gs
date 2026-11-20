@@ -5,6 +5,7 @@
  *  POST (website form)          → adds one row per lead. No key needed, like any contact form.
  *  GET  ?action=list&key=…      → all leads, for the dashboard. Key required.
  *  POST action=update&key=…     → dashboard saves stage / note / call time / activity. Key required.
+ *  POST action=delete&key=…&ids=a,b → dashboard deletes leads: rows move to the "Deleted" tab. Key required.
  *  POST action=login&user=…&pass=… → dashboard sign-in. Right password → the dashboard key.
  *
  * Run setup() once from the editor: it creates the "Leads" tab and prints your dashboard key.
@@ -50,6 +51,7 @@ function doPost(e) {
   let res;
   try {
     if (p.action === 'update') res = authed_(p) ? update_(p) : { ok: false, error: 'unauthorized' };
+    else if (p.action === 'delete') res = authed_(p) ? delete_(p) : { ok: false, error: 'unauthorized' };
     else if (p.action === 'login') res = login_(p);
     else res = addLead_(p);
   } finally {
@@ -86,6 +88,23 @@ function update_(p) {
   if ('activity' in p) set('activity', clean_(p.activity, 20000));
   set('updated_at', new Date().toISOString());
   return { ok: true };
+}
+
+// not destroyed: each row is copied to the "Deleted" tab first, so it can be pasted back
+function delete_(p) {
+  const sh = sheet_(), head = head_(sh);
+  const ids = String(p.ids || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 500);
+  const rows = ids.map(function (id) { return rowOf_(sh, head, id); }).filter(Boolean).sort(function (a, b) { return b - a; });
+  if (!rows.length) return { ok: true, deleted: 0 };
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let bin = ss.getSheetByName('Deleted');
+  if (!bin) { bin = ss.insertSheet('Deleted'); bin.appendRow(head.concat('deleted_at')); bin.setFrozenRows(1); bin.getRange(1, 1, 1, head.length + 1).setFontWeight('bold'); }
+  const now = new Date().toISOString();
+  rows.forEach(function (r) {
+    bin.appendRow(sh.getRange(r, 1, 1, head.length).getValues()[0].concat(now));
+    sh.deleteRow(r);
+  });
+  return { ok: true, deleted: rows.length };
 }
 
 function readAll_() {
